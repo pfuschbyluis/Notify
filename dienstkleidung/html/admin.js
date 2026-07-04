@@ -239,6 +239,13 @@
                     <input type="text" data-path="RestoreClothesLabel" value="${escapeAttr(s.RestoreClothesLabel)}">
                 </div>
             </div>
+        </div>
+        <div class="admin-section">
+            <div class="admin-section__title">Darstellung</div>
+            <div class="admin-grid admin-grid--single">
+                ${checkboxField('f_anim', 'EnableUiAnimations', 'Öffnungs-Animationen (Outfit-Menü & Admin-Panel)', s.EnableUiAnimations !== false)}
+                <p class="help-text">Deaktivieren für sofortiges Öffnen ohne Slide/Fade – hilfreich bei empfindlichen Spielern oder schwächeren PCs.</p>
+            </div>
         </div>`);
     }
 
@@ -319,9 +326,11 @@
             const safeKey = escapeAttr(k);
             return `
             <label class="job-toggle ${isConfigured ? '' : 'is-unconfigured'}">
-                <input type="checkbox" data-path="AllowedJobs.${safeKey}" ${s.AllowedJobs[k] ? 'checked' : ''}>
-                <span>${escapeAttr(capitalize(k))}</span>
-                ${isConfigured ? '' : '<span class="job-badge-warn" title="Für diesen Job sind keine Kleidungsdaten hinterlegt (nur leere Platzhalter in config.lua)">nicht konfiguriert</span>'}
+                <div class="job-toggle__top">
+                    <input type="checkbox" data-path="AllowedJobs.${safeKey}" ${s.AllowedJobs[k] ? 'checked' : ''}>
+                    <span class="job-toggle__name">${escapeAttr(capitalize(k))}</span>
+                </div>
+                ${isConfigured ? '' : '<span class="job-badge-warn" title="Für diesen Job sind keine Kleidungsdaten hinterlegt">Nicht konfiguriert</span>'}
             </label>`;
         }).join('');
 
@@ -506,8 +515,14 @@
         adminFoot.classList.toggle('is-outfits-mode', activeTab === 'outfits');
     }
 
+    function applyUiAnimations(enabled) {
+        document.documentElement.classList.toggle('ui-animations-off', enabled === false);
+    }
+
     function render() {
         if (!state) return;
+
+        applyUiAnimations(state.EnableUiAnimations !== false);
 
         tabsNav.querySelectorAll('button[data-tab]').forEach(b => b.classList.toggle('is-active', b.dataset.tab === activeTab));
         updateFooter();
@@ -560,6 +575,9 @@
         if (!el.dataset || !el.dataset.path) return;
         if (el.tagName === 'SELECT') return; // handled on change
         setPath(state, el.dataset.path, readInputValue(el));
+        if (el.dataset.path === 'EnableUiAnimations') {
+            applyUiAnimations(state.EnableUiAnimations !== false);
+        }
     });
 
     body.addEventListener('change', (e) => {
@@ -567,6 +585,9 @@
 
         if (el.dataset && el.dataset.path) {
             setPath(state, el.dataset.path, readInputValue(el));
+            if (el.dataset.path === 'EnableUiAnimations') {
+                applyUiAnimations(state.EnableUiAnimations !== false);
+            }
             if (el.dataset.path.startsWith('AllowedJobs.') && activeTab === 'jobs') {
                 render();
             }
@@ -890,6 +911,8 @@
         dbg('openAdmin empfangen, DEBUG =', DEBUG);
         if (DEBUG) post('debug:ping');
         state = JSON.parse(JSON.stringify(data.settings || {}));
+        if (state.EnableUiAnimations === undefined) state.EnableUiAnimations = true;
+        applyUiAnimations(state.EnableUiAnimations !== false);
         state.AllowedJobs = state.AllowedJobs || {};
         state.JobPeds = state.JobPeds || {};
         state.PedSettings = state.PedSettings || { freeze: true, invincible: true, blockEvents: true, showMarker: false, showBlip: false, markerDrawDistance: 30 };

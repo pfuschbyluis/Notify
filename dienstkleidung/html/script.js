@@ -32,6 +32,13 @@ try {
 }
 
 let DEBUG = false;
+let UI_ANIMATIONS = true;
+
+function applyUiAnimations(enabled) {
+    UI_ANIMATIONS = enabled !== false;
+    document.documentElement.classList.toggle('ui-animations-off', !UI_ANIMATIONS);
+}
+
 function dbg(...args) {
     if (DEBUG) console.log('[dienstkleidung]', ...args);
 }
@@ -97,7 +104,7 @@ function resolveJob(raw) {
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 function animateIn(el, fromX, delay, dur) {
-    if (!el.animate) return;
+    if (!UI_ANIMATIONS || !el.animate) return;
     el.animate(
         [{ transform: `translateX(${fromX}px)` }, { transform: 'none' }],
         { duration: dur || 320, delay: delay || 0, easing: EASE }
@@ -287,6 +294,7 @@ window.addEventListener('message', (event) => {
     }
     if (data.action === 'open') {
         DEBUG = !!data.debug;
+        applyUiAnimations(data.enableUiAnimations);
         dbg('open empfangen, DEBUG =', DEBUG);
         try {
             render(data);

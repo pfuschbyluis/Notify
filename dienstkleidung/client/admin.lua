@@ -5,7 +5,7 @@
 local ADMIN_SYNC_FIELDS = {
     'Debug', 'Notify', 'NotifyTitle', 'NotifyDuration', 'NotifyPosition',
     'Interaction', 'MenuType', 'ClothingSystem',
-    'EnableRestoreClothes', 'RestoreClothesLabel',
+    'EnableRestoreClothes', 'RestoreClothesLabel', 'EnableUiAnimations',
     'AllowedJobs', 'JobPeds', 'PedSettings', 'KeyInteract', 'Target'
 }
 
@@ -20,6 +20,7 @@ local ADMIN_FIELD_TYPES = {
     ClothingSystem = 'string',
     EnableRestoreClothes = 'boolean',
     RestoreClothesLabel = 'string',
+    EnableUiAnimations = 'boolean',
     AllowedJobs = 'table',
     JobPeds = 'table',
     PedSettings = 'table',

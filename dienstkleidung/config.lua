@@ -40,6 +40,9 @@ Config.DeletePedsOnLogout = false
 Config.EnableRestoreClothes = true
 Config.RestoreClothesLabel = 'Normale Kleidung anziehen'
 
+-- Öffnungs-Animationen für Outfit-Menü und Admin-Panel (kann im Admin deaktiviert werden)
+Config.EnableUiAnimations = true
+
 Config.PedSettings = {
     freeze = true,
     invincible = true,

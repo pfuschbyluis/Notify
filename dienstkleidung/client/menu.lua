@@ -114,6 +114,7 @@ local function OpenCustomMenu(jobName)
     SendNUIMessage({
         action = 'open',
         debug = JobOutfit.IsDebug(),
+        enableUiAnimations = Config.EnableUiAnimations ~= false,
         title = 'Dienstkleidung',
         job = jobName,
         jobLabel = realJobName,

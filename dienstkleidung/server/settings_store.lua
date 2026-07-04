@@ -29,7 +29,7 @@ NS.ADMIN_ACE = 'job_outfit.admin'
 NS.ADMIN_FIELDS = {
     'Debug', 'Notify', 'NotifyTitle', 'NotifyDuration', 'NotifyPosition',
     'Interaction', 'MenuType', 'ClothingSystem',
-    'EnableRestoreClothes', 'RestoreClothesLabel',
+    'EnableRestoreClothes', 'RestoreClothesLabel', 'EnableUiAnimations',
     'PedSettings', 'KeyInteract', 'Target'
 }
 
@@ -145,6 +145,7 @@ function NS.SanitizeOverrides(raw, base)
     if raw.ClothingSystem ~= nil then out.ClothingSystem = NS.SanitizeEnum('ClothingSystem', raw.ClothingSystem, base.ClothingSystem) end
     if raw.EnableRestoreClothes ~= nil then out.EnableRestoreClothes = NS.SanitizeBool(raw.EnableRestoreClothes, base.EnableRestoreClothes) end
     if raw.RestoreClothesLabel ~= nil then out.RestoreClothesLabel = NS.SanitizeString(raw.RestoreClothesLabel, base.RestoreClothesLabel) end
+    if raw.EnableUiAnimations ~= nil then out.EnableUiAnimations = NS.SanitizeBool(raw.EnableUiAnimations, base.EnableUiAnimations) end
     if raw.PedSettings ~= nil then out.PedSettings = NS.SanitizePedSettings(raw.PedSettings, base.PedSettings) end
     if raw.KeyInteract ~= nil then out.KeyInteract = NS.SanitizeKeyInteract(raw.KeyInteract, base.KeyInteract) end
     if raw.Target ~= nil then out.Target = NS.SanitizeTarget(raw.Target, base.Target) end
