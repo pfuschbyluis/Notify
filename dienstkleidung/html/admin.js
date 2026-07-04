@@ -144,6 +144,34 @@
         </label>`;
     }
 
+    function isPedEnabled(ped) {
+        return !!(ped && ped.enabled !== false);
+    }
+
+    function pedToggleControl(key, ped) {
+        const safeKey = escapeAttr(key);
+        const enabled = isPedEnabled(ped);
+        const btnLabel = enabled ? 'Deaktivieren' : 'Aktivieren';
+        const statusLabel = enabled ? 'Aktiv' : 'Inaktiv';
+        const statusClass = enabled ? 'is-active' : 'is-inactive';
+        const btnClass = enabled ? 'btn--deactivate' : 'btn--activate';
+        const hint = enabled
+            ? 'Der NPC wird nach dem Speichern nicht mehr gespawnt. Spieler können das Outfit-Menü nicht mehr über ihn öffnen.'
+            : 'Der NPC wird nach dem Speichern an den konfigurierten Koordinaten gespawnt und öffnet das Outfit-Menü für berechtigte Spieler.';
+        const title = enabled
+            ? 'Ped deaktivieren – der NPC erscheint nicht mehr in der Welt'
+            : 'Ped aktivieren – der NPC wird an den eingetragenen Koordinaten gespawnt';
+
+        return `
+        <div class="ped-toggle">
+            <div class="ped-toggle__row">
+                <span class="ped-status ${statusClass}">${statusLabel}</span>
+                <button type="button" class="btn btn--sm ${btnClass}" data-toggle-ped="${safeKey}" title="${escapeAttr(title)}">${btnLabel}</button>
+            </div>
+            <p class="ped-toggle__hint">${escapeAttr(hint)}</p>
+        </div>`;
+    }
+
     // Native <select>-Popups werden von FiveMs CEF teils komplett weiß/ungestylt
     // dargestellt (bekannte Einschränkung). Deshalb ein eigenes, voll gestyltes
     // Dropdown statt <select>/<option>.
@@ -235,14 +263,13 @@
         const c = ped.coords || { x: 0, y: 0, z: 0, w: 0 };
         const safeKey = escapeAttr(key);
         const safeLabelKey = escapeAttr(capitalize(key));
-        const checkboxId = `ped_enabled_${safeKey}`;
         return `
         <div class="ped-card" data-ped-job="${safeKey}">
             <div class="ped-card__head">
                 <h3>${safeLabelKey}</h3>
                 <div class="ped-card__actions">
-                    ${checkboxField(checkboxId, `JobPeds.${safeKey}.enabled`, 'Aktiviert', ped.enabled, true)}
-                    <button type="button" class="btn btn--danger btn--sm" data-remove-ped="${safeKey}">Entfernen</button>
+                    ${pedToggleControl(key, ped)}
+                    <button type="button" class="btn btn--danger btn--sm" data-remove-ped="${safeKey}" title="Ped-Konfiguration für diesen Job vollständig entfernen">Entfernen</button>
                 </div>
             </div>
             <div class="admin-grid">
@@ -559,6 +586,16 @@
         if (removeKey) {
             delete state.JobPeds[removeKey];
             render();
+            return;
+        }
+
+        const toggleBtn = e.target.closest && e.target.closest('[data-toggle-ped]');
+        if (toggleBtn) {
+            const key = toggleBtn.getAttribute('data-toggle-ped');
+            if (key && state.JobPeds && state.JobPeds[key]) {
+                state.JobPeds[key].enabled = !isPedEnabled(state.JobPeds[key]);
+                render();
+            }
             return;
         }
 

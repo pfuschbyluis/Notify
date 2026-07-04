@@ -316,9 +316,78 @@
 
 .ped-card__actions {
     display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.ped-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    max-width: 280px;
+}
+
+.ped-toggle__row {
+    display: flex;
     align-items: center;
     gap: 10px;
-    flex-shrink: 0;
+}
+
+.ped-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.ped-status::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.ped-status.is-active {
+    color: #22b06d;
+}
+
+.ped-status.is-inactive {
+    color: var(--text-3);
+}
+
+.ped-toggle__hint {
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--text-3);
+    text-align: right;
+    margin: 0;
+}
+
+.btn--activate {
+    border-color: rgba(34, 176, 109, 0.35);
+    background: rgba(34, 176, 109, 0.1);
+    color: #22b06d;
+}
+.btn--activate:hover {
+    background: rgba(34, 176, 109, 0.18);
+    color: #2fd68a;
+}
+
+.btn--deactivate {
+    border-color: rgba(242, 178, 51, 0.35);
+    background: rgba(242, 178, 51, 0.1);
+    color: #f2b233;
+}
+.btn--deactivate:hover {
+    background: rgba(242, 178, 51, 0.18);
+    color: #ffc857;
 }
 
 /* ─── Custom select (xselect) ────────────────────────────── */
@@ -587,7 +656,7 @@
 
 .ped-card__head {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     margin-bottom: 16px;
     gap: 12px;
