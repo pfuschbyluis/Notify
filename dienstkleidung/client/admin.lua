@@ -44,6 +44,10 @@ local function ApplyClientSettings(settings)
         end
     end
 
+    if settings.Debug ~= nil then
+        JobOutfit.State.debugEnabled = nil
+    end
+
     if pedsChanged then
         JobOutfit.Peds.DeleteAll()
         JobOutfit.Peds.SpawnAll()
@@ -81,7 +85,6 @@ RegisterNetEvent('job_outfit:admin:openPanel', function(settings, jobKeys, confi
 end)
 
 CreateThread(function()
-    Wait(1000)
     TriggerServerEvent('job_outfit:admin:requestSync')
 end)
 

@@ -1,6 +1,6 @@
 Config = {}
 
-Config.Debug = true
+Config.Debug = false
 
 -- Notify-Auswahl:
 -- 'standard' = eigene integrierte Notify aus diesem Script (Standard)

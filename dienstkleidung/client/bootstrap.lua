@@ -102,16 +102,15 @@ AddEventHandler('onResourceStop', function(resource)
     JobOutfit.Peds.DeleteAll()
 end)
 
--- Diagnose: Ressourcenname beim Start ausgeben. Muss EXAKT mit dem
--- 'resourceName' aus der NUI-Konsole übereinstimmen, sonst erreichen die
--- fetch()-Aufrufe (RegisterNUICallback) den Client nie.
+-- Diagnose beim Start nur bei aktivem Debug.
 CreateThread(function()
-    print(('^2[job_outfit] Client geladen. GetCurrentResourceName() = "%s"^7'):format(GetCurrentResourceName()))
-    print('^2[job_outfit] NUI-Callbacks registriert: close, selectOutfit, restoreClothes, admin:save, admin:close, admin:getPosition, admin:outfits:*^7')
+    if not JobOutfit.IsDebug() then return end
+    JobOutfit.Debug(('Client geladen. GetCurrentResourceName() = "%s"'):format(GetCurrentResourceName()), 'BOOT')
+    JobOutfit.Debug('NUI-Callbacks registriert: close, selectOutfit, restoreClothes, admin:save, admin:close, admin:getPosition, admin:outfits:*', 'BOOT')
 end)
 
--- Test-Callback zum Prüfen der JS->Lua-Brücke (per NUI aufrufbar).
+-- Test-Callback zum Prüfen der JS->Lua-Brücke (nur bei aktivem Debug).
 RegisterNUICallback('debug:ping', function(_, cb)
-    print('^2[job_outfit] debug:ping empfangen! JS->Lua fetch FUNKTIONIERT.^7')
+    JobOutfit.Debug('debug:ping empfangen! JS->Lua fetch FUNKTIONIERT.', 'NUI')
     cb('pong')
 end)

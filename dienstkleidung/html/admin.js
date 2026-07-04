@@ -20,8 +20,6 @@
     } catch (e) {
         resourceName = 'ERROR_' + e.message;
     }
-    // Immer loggen (nicht DEBUG-gated), damit der Resource-Name sofort sichtbar ist.
-    console.log('[dienstkleidung:admin] resourceName =', JSON.stringify(resourceName), '| IN_FIVEM =', IN_FIVEM);
 
     let DEBUG = false;
 
@@ -815,9 +813,7 @@
 
         DEBUG = !!data.debug;
         dbg('openAdmin empfangen, DEBUG =', DEBUG);
-        // Automatischer Brücken-Test: wenn dies in der Server-/F8-Konsole
-        // 'debug:ping empfangen' auslöst, funktioniert JS->Lua.
-        post('debug:ping');
+        if (DEBUG) post('debug:ping');
         state = JSON.parse(JSON.stringify(data.settings || {}));
         state.AllowedJobs = state.AllowedJobs || {};
         state.JobPeds = state.JobPeds || {};

@@ -30,7 +30,6 @@ try {
 } catch (e) {
     resourceName = 'ERROR_' + e.message;
 }
-console.log('[dienstkleidung] resourceName =', JSON.stringify(resourceName), '| IN_FIVEM =', IN_FIVEM);
 
 let DEBUG = false;
 function dbg(...args) {
