@@ -70,7 +70,11 @@ end
 -- eine Abweichung besteht. Im Ruhezustand nur alle 250 ms, um CPU zu sparen.
 CreateThread(function()
     while true do
-        local actual = IsNuiFocused()
+        -- IsNuiFocused() liefert je nach FiveM-Build einen Boolean ODER die
+        -- Zahl 1/0. In Lua ist 1 ~= true immer wahr, deshalb hart auf Boolean
+        -- normalisieren, sonst dreht die Reconciliation-Schleife endlos durch.
+        local raw = IsNuiFocused()
+        local actual = (raw == true) or (raw == 1)
 
         if actual ~= desiredFocus then
             SetNuiFocus(desiredFocus, desiredFocus)
@@ -314,7 +318,8 @@ CreateThread(function()
     while true do
         if debugHud then
             Wait(0)
-            local actual = IsNuiFocused()
+            local raw = IsNuiFocused()
+            local actual = (raw == true) or (raw == 1)
             local mismatch = (actual ~= desiredFocus)
             local lines = {
                 '~y~[job_outfit DEBUG]~s~',
