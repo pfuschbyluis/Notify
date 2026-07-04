@@ -28,7 +28,6 @@
     let configuredJobs = {};
     let activeTab = 'general';
     let pendingAddPedJob = null;
-    let panelClosing = false;
 
     // Muss exakt zu componentSlots/propSlots in client.lua passen.
     const CLOTHES_SLOTS = [
@@ -394,14 +393,6 @@
         };
 
         body.innerHTML = (renderers[activeTab] || renderGeneral)(state);
-
-        if (IN_FIVEM && !app.classList.contains('hidden') && !panelClosing) {
-            window.setTimeout(() => {
-                if (!app.classList.contains('hidden') && !panelClosing) {
-                    post('admin:keepFocus');
-                }
-            }, 0);
-        }
     }
 
     /* ---------- Input handling (delegated, no full re-render for plain fields) ---------- */
@@ -660,19 +651,13 @@
     });
 
     function closePanel() {
-        panelClosing = true;
         app.classList.add('hidden');
-        post('admin:close').finally(() => {
-            panelClosing = false;
-        });
+        post('admin:close');
     }
 
     function savePanel() {
-        panelClosing = true;
         app.classList.add('hidden');
-        post('admin:save', state).finally(() => {
-            panelClosing = false;
-        });
+        post('admin:save', state);
     }
 
     closeBtn.addEventListener('click', closePanel);
@@ -714,7 +699,6 @@
 
         if (data.action !== 'openAdmin') return;
 
-        panelClosing = false;
         state = JSON.parse(JSON.stringify(data.settings || {}));
         state.AllowedJobs = state.AllowedJobs || {};
         state.JobPeds = state.JobPeds || {};

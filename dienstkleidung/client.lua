@@ -213,34 +213,6 @@ RegisterCommand('outfitunstuck', function()
     CloseAllNui()
 end, false)
 
--- ESC-Fallback in Lua: funktioniert auch wenn NUI-Klicks/JS nicht reagieren.
-CreateThread(function()
-    while true do
-        if nuiFocusActive then
-            Wait(0)
-            DisableControlAction(0, 1, true)
-            DisableControlAction(0, 2, true)
-            DisableControlAction(0, 142, true)
-            DisableControlAction(0, 18, true)
-            DisableControlAction(0, 106, true)
-
-            if IsDisabledControlJustReleased(0, 322) or IsDisabledControlJustReleased(0, 200) then
-                if adminMenuOpen then
-                    CloseAdminPanel()
-                elseif outfitMenuOpen then
-                    CloseOutfitMenu()
-                else
-                    ReleaseNuiFocus()
-                    SendNUIMessage({ action = 'close' })
-                    SendNUIMessage({ action = 'closeAdmin' })
-                end
-            end
-        else
-            Wait(300)
-        end
-    end
-end)
-
 local function GetJob()
     local data = RefreshPlayerData()
     return data and data.job or nil
@@ -1085,17 +1057,6 @@ end)
 
 RegisterNUICallback('admin:close', function(_, cb)
     CloseAdminPanel()
-    cb('ok')
-end)
-
--- FiveM-CEF verliert nach DOM-Neurendern oft den Mausfokus – nur Fokus neu setzen, nicht neu öffnen.
-RegisterNUICallback('admin:keepFocus', function(_, cb)
-    if nuiFocusActive and adminMenuOpen then
-        SetNuiFocus(true, true)
-        if SetNuiFocusKeepInput then
-            SetNuiFocusKeepInput(false)
-        end
-    end
     cb('ok')
 end)
 
