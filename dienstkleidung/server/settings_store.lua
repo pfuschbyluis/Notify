@@ -193,7 +193,11 @@ NS.Overrides = NS.SanitizeOverrides(NS.LoadRawFile(), NS.Defaults)
 
 function NS.ApplyOverridesToConfig()
     for _, field in ipairs(NS.ADMIN_FIELDS) do
-        Config[field] = NS.Overrides[field] ~= nil and NS.Overrides[field] or NS.DeepCopy(NS.Defaults[field])
+        if NS.Overrides[field] ~= nil then
+            Config[field] = NS.DeepCopy(NS.Overrides[field])
+        else
+            Config[field] = NS.DeepCopy(NS.Defaults[field])
+        end
     end
 end
 
