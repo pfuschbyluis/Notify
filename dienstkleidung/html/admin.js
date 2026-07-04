@@ -16,6 +16,7 @@
     }
 
     const app = document.getElementById('adminApp');
+    const overlay = app.querySelector('.admin__overlay');
     const body = document.getElementById('adminBody');
     const tabsNav = document.getElementById('adminTabs');
     const closeBtn = document.getElementById('adminCloseBtn');
@@ -392,6 +393,10 @@
         };
 
         body.innerHTML = (renderers[activeTab] || renderGeneral)(state);
+
+        if (IN_FIVEM && !app.classList.contains('hidden')) {
+            post('admin:keepFocus');
+        }
     }
 
     /* ---------- Input handling (delegated, no full re-render for plain fields) ---------- */
@@ -650,18 +655,22 @@
     });
 
     function closePanel() {
-        app.classList.add('hidden');
         post('admin:close');
     }
 
     function savePanel() {
         post('admin:save', state);
-        app.classList.add('hidden');
     }
 
     closeBtn.addEventListener('click', closePanel);
     cancelBtn.addEventListener('click', closePanel);
     saveBtn.addEventListener('click', savePanel);
+
+    if (overlay) {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closePanel();
+        });
+    }
 
     document.addEventListener('keydown', (e) => {
         // Kein hidden-Check mehr: gleicher Grund wie im Haupt-NUI-Skript –

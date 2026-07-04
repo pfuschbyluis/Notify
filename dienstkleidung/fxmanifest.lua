@@ -2,9 +2,10 @@ fx_version 'cerulean'
 game 'gta5'
 lua '54'
 
+name 'dienstkleidung'
 author 'luka004'
-description 'Multi-Job Outfit-Menü'
-version '1.1.0'
+description 'Dienstkleidung – Multi-Job Outfit-Menü mit Admin-Panel'
+version '1.2.0'
 
 ui_page 'html/index.html'
 

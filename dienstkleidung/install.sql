@@ -1,5 +1,5 @@
 -- ============================================================
--- multijob_outfit – Datenbank-Schema
+-- dienstkleidung – Datenbank-Schema
 -- ============================================================
 -- Diese Tabellen werden vom Script beim ersten Start automatisch
 -- angelegt (CREATE TABLE IF NOT EXISTS), falls sie noch nicht existieren.

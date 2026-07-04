@@ -5,7 +5,7 @@
 const app        = document.getElementById('app');
 const menu       = document.getElementById('menu');
 const eyebrow    = document.getElementById('eyebrow');
-const title      = document.getElementById('title');
+const title      = document.getElementById('menuTitle');
 const jobIcon    = document.getElementById('jobIcon');
 const rankLabel  = document.getElementById('rankLabel');
 const rankPill   = document.getElementById('rank');
@@ -116,8 +116,11 @@ function escapeHtml(value) {
 }
 
 function closeMenu() {
-    app.classList.add('hidden');
     post('close');
+}
+
+function hideMenu() {
+    app.classList.add('hidden');
 }
 
 /* ---------- Render ---------- */
@@ -169,7 +172,6 @@ function render(data) {
             extraClass: 'item--restore' + (disabled ? ' is-disabled' : ''),
             index: idx++,
             onClick: disabled ? null : () => {
-                app.classList.add('hidden');
                 post('restoreClothes');
             }
         });
@@ -200,7 +202,6 @@ function render(data) {
             chevIcon: isActive ? '' : undefined,
             index: idx++,
             onClick: isActive ? null : () => {
-                app.classList.add('hidden');
                 post('selectOutfit', { id: outfit.id });
             }
         }));
@@ -268,11 +269,15 @@ window.addEventListener('message', (event) => {
         animateIn(menu, 20, 0, 340);
     }
     if (data.action === 'close') {
-        app.classList.add('hidden');
+        hideMenu();
     }
 });
 
 closeBtn.addEventListener('click', closeMenu);
+
+app.addEventListener('click', (event) => {
+    if (event.target === app) closeMenu();
+});
 
 document.addEventListener('keydown', (event) => {
     // Bewusst OHNE hidden-Check: Falls das UI durch einen Render-Fehler oder

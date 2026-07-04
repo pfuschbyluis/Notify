@@ -133,7 +133,7 @@ html, body {
     align-items: center;
     justify-content: flex-end;
     padding-right: 5.5vw;
-    pointer-events: none;
+    pointer-events: auto;
 }
 
 .menu {

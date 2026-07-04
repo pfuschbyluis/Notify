@@ -18,6 +18,27 @@ local function Debug(msg)
     end
 end
 
+local nuiFocusActive = false
+
+local function SetNuiOpen(open)
+    nuiFocusActive = open == true
+
+    SetNuiFocus(nuiFocusActive, nuiFocusActive)
+
+    if SetNuiFocusKeepInput then
+        SetNuiFocusKeepInput(false)
+    end
+end
+
+local function ReleaseNuiFocus()
+    nuiFocusActive = false
+    SetNuiFocus(false, false)
+
+    if SetNuiFocusKeepInput then
+        SetNuiFocusKeepInput(false)
+    end
+end
+
 local function InitESX()
     while ESX == nil do
         local ok, obj = pcall(function()
@@ -171,14 +192,19 @@ local function Notify(msg, typ, duration)
 end
 
 local function CloseOutfitMenu()
-    SetNuiFocus(false, false)
+    ReleaseNuiFocus()
     SendNUIMessage({ action = 'close' })
+end
+
+local function CloseAdminPanel()
+    ReleaseNuiFocus()
+    SendNUIMessage({ action = 'closeAdmin' })
 end
 
 -- Not-Aus: setzt NUI-Fokus bedingungslos zurück und schließt beide Menüs,
 -- falls die Maus aus irgendeinem Grund in der UI hängen bleiben sollte.
 RegisterCommand('outfitunstuck', function()
-    SetNuiFocus(false, false)
+    ReleaseNuiFocus()
     SendNUIMessage({ action = 'close' })
     SendNUIMessage({ action = 'closeAdmin' })
 end, false)
@@ -495,6 +521,7 @@ HandleCharacterLoaded = function(reason, xPlayer)
 
     if cfg.CloseMenuOnCharacterLoad ~= false then
         CloseOutfitMenu()
+        CloseAdminPanel()
     end
 
     if IsVMSMulticharsEnabled() then
@@ -514,6 +541,7 @@ HandleCharacterLogout = function(reason)
 
     if cfg.CloseMenuOnCharacterLoad ~= false then
         CloseOutfitMenu()
+        CloseAdminPanel()
     end
 
     if cfg.DeletePedsOnLogout and DeleteSpawnedPeds then
@@ -705,7 +733,7 @@ local function OpenCustomMenu(jobName)
         }
     end
 
-    SetNuiFocus(true, true)
+    SetNuiOpen(true)
     SendNUIMessage({
         action = 'open',
         title = 'Dienstkleidung',
@@ -907,6 +935,7 @@ AddEventHandler('onResourceStop', function(resource)
     if resource ~= GetCurrentResourceName() then return end
 
     CloseOutfitMenu()
+    CloseAdminPanel()
 
     if isWearingJobOutfit and savedCivilianSkin then
         RestoreCivilianClothes()
@@ -986,7 +1015,7 @@ RegisterNetEvent('job_outfit:admin:saveError', function(reason)
 end)
 
 RegisterNetEvent('job_outfit:admin:openPanel', function(settings, jobKeys, configuredJobs)
-    SetNuiFocus(true, true)
+    SetNuiOpen(true)
 
     SendNUIMessage({
         action = 'openAdmin',
@@ -1018,13 +1047,21 @@ RegisterNUICallback('admin:getPosition', function(_, cb)
 end)
 
 RegisterNUICallback('admin:save', function(data, cb)
-    SetNuiFocus(false, false)
+    CloseAdminPanel()
     TriggerServerEvent('job_outfit:admin:save', data)
     cb('ok')
 end)
 
 RegisterNUICallback('admin:close', function(_, cb)
-    SetNuiFocus(false, false)
+    CloseAdminPanel()
+    cb('ok')
+end)
+
+-- FiveM-CEF verliert nach DOM-Neurendern oft den Mausfokus – Fokus kurz neu setzen.
+RegisterNUICallback('admin:keepFocus', function(_, cb)
+    if nuiFocusActive then
+        SetNuiOpen(true)
+    end
     cb('ok')
 end)
 
