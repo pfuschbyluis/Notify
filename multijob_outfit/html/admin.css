@@ -15,8 +15,8 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    background: rgba(5, 7, 12, 0.65);
-    backdrop-filter: blur(6px);
+    /* Kein backdrop-filter: FiveM-CEF rendert das sonst oft als komplett schwarzen Screen. */
+    background: rgba(0, 0, 0, 0.35);
     padding: 20px;
 }
 
