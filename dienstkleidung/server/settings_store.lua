@@ -63,7 +63,15 @@ end
 
 function NS.SanitizeBool(v, fallback)
     if type(v) == 'boolean' then return v end
+    if v == 1 or v == '1' or v == 'true' then return true end
+    if v == 0 or v == '0' or v == 'false' then return false end
     return fallback
+end
+
+-- oxmysql liefert TINYINT(1) je nach Treiber/Build als Zahl oder Boolean.
+function NS.FromDBBool(v)
+    if v == true or v == 1 or v == '1' then return true end
+    return false
 end
 
 function NS.SanitizeString(v, fallback)

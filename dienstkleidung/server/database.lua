@@ -147,7 +147,7 @@ function NS.ReloadJobsCache()
     local rows = MySQL.query.await('SELECT job_name, enabled FROM `multijob_outfit_jobs`') or {}
     local out = {}
     for _, row in ipairs(rows) do
-        out[row.job_name] = row.enabled == 1
+        out[row.job_name] = NS.FromDBBool(row.enabled)
     end
     NS.Cache.Jobs = out
 end
@@ -157,7 +157,7 @@ function NS.ReloadPedsCache()
     local out = {}
     for _, row in ipairs(rows) do
         out[row.job_name] = {
-            enabled = row.enabled == 1,
+            enabled = NS.FromDBBool(row.enabled),
             model = row.model,
             coords = { x = row.coord_x, y = row.coord_y, z = row.coord_z, w = row.heading },
             scenario = row.scenario or '',
