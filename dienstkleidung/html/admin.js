@@ -156,22 +156,37 @@
         state.AllowedJobs[key] = true;
     }
 
+    function isMarkerMode(s) {
+        return !!(s && s.PedSettings && s.PedSettings.displayMode === 'markers');
+    }
+
     function pedToggleControl(key, ped, s) {
         const safeKey = escapeAttr(key);
         const enabled = isPedEnabled(ped);
         const jobAllowed = isJobAllowed(s, key);
+        const markerMode = isMarkerMode(s);
         const btnLabel = enabled ? 'Deaktivieren' : 'Aktivieren';
         const statusLabel = enabled ? 'Aktiv' : 'Inaktiv';
         const statusClass = enabled ? 'is-active' : 'is-inactive';
         const btnClass = enabled ? 'btn--deactivate' : 'btn--activate';
         const hint = enabled
             ? (jobAllowed
-                ? 'Der NPC wird nach dem Speichern an den Koordinaten gespawnt. Marker/Blip zeigen die Position in der Welt.'
-                : 'Achtung: Der Job ist unter „Jobs“ deaktiviert – der Ped spawnt erst, wenn der Job erlaubt ist.')
-            : 'Aktiviert den NPC und den zugehörigen Job. Nach dem Speichern erscheint der Ped an den Koordinaten.';
+                ? (markerMode
+                    ? 'Nach dem Speichern erscheint an den Koordinaten ein Marker (ohne NPC).'
+                    : 'Der NPC wird nach dem Speichern an den Koordinaten gespawnt.')
+                : (markerMode
+                    ? 'Achtung: Der Job ist unter „Jobs“ deaktiviert – der Marker erscheint erst, wenn der Job erlaubt ist.'
+                    : 'Achtung: Der Job ist unter „Jobs“ deaktiviert – der Ped spawnt erst, wenn der Job erlaubt ist.'))
+            : (markerMode
+                ? 'Aktiviert den Marker und den zugehörigen Job. Nach dem Speichern erscheint die Position in der Welt.'
+                : 'Aktiviert den NPC und den zugehörigen Job. Nach dem Speichern erscheint der Ped an den Koordinaten.');
         const title = enabled
-            ? 'Ped deaktivieren – der NPC erscheint nicht mehr in der Welt'
-            : 'Ped aktivieren – aktiviert auch den Job und spawnt den NPC nach dem Speichern';
+            ? (markerMode
+                ? 'Marker deaktivieren – die Position erscheint nicht mehr in der Welt'
+                : 'Ped deaktivieren – der NPC erscheint nicht mehr in der Welt')
+            : (markerMode
+                ? 'Marker aktivieren – aktiviert auch den Job und zeigt die Position nach dem Speichern'
+                : 'Ped aktivieren – aktiviert auch den Job und spawnt den NPC nach dem Speichern');
 
         return `
         <div class="ped-toggle">
@@ -282,18 +297,8 @@
         const c = ped.coords || { x: 0, y: 0, z: 0, w: 0 };
         const safeKey = escapeAttr(key);
         const safeLabelKey = escapeAttr(capitalize(key));
-        return `
-        <div class="ped-card" data-ped-job="${safeKey}">
-            <div class="ped-card__head">
-                <div class="ped-card__title-wrap">
-                    <h3>${safeLabelKey}</h3>
-                    ${isPedEnabled(ped) && !isJobAllowed(s, key) ? '<span class="ped-job-warn">Job deaktiviert</span>' : ''}
-                </div>
-                <div class="ped-card__actions">
-                    ${pedToggleControl(key, ped, s)}
-                    <button type="button" class="btn btn--danger btn--sm" data-remove-ped="${safeKey}" title="Ped-Konfiguration für diesen Job vollständig entfernen">Entfernen</button>
-                </div>
-            </div>
+        const markerMode = isMarkerMode(s);
+        const modelFields = markerMode ? '' : `
             <div class="admin-grid">
                 <div class="field">
                     <label>Ped-Model</label>
@@ -307,7 +312,28 @@
                     <label>Label</label>
                     <input type="text" data-path="JobPeds.${safeKey}.label" value="${escapeAttr(ped.label || '')}">
                 </div>
+            </div>`;
+        const labelField = markerMode ? `
+            <div class="admin-grid admin-grid--single">
+                <div class="field">
+                    <label>Label (Tasten-Interaktion)</label>
+                    <input type="text" data-path="JobPeds.${safeKey}.label" value="${escapeAttr(ped.label || '')}">
+                </div>
+            </div>` : '';
+        return `
+        <div class="ped-card" data-ped-job="${safeKey}">
+            <div class="ped-card__head">
+                <div class="ped-card__title-wrap">
+                    <h3>${safeLabelKey}</h3>
+                    ${isPedEnabled(ped) && !isJobAllowed(s, key) ? '<span class="ped-job-warn">Job deaktiviert</span>' : ''}
+                </div>
+                <div class="ped-card__actions">
+                    ${pedToggleControl(key, ped, s)}
+                    <button type="button" class="btn btn--danger btn--sm" data-remove-ped="${safeKey}" title="${markerMode ? 'Marker-Position für diesen Job vollständig entfernen' : 'Ped-Konfiguration für diesen Job vollständig entfernen'}">Entfernen</button>
+                </div>
             </div>
+            ${modelFields}
+            ${labelField}
             <div class="ped-card__coords">
                 <div class="field"><label>X</label><input type="number" step="0.01" data-path="JobPeds.${safeKey}.coords.x" value="${c.x}"></div>
                 <div class="field"><label>Y</label><input type="number" step="0.01" data-path="JobPeds.${safeKey}.coords.y" value="${c.y}"></div>
@@ -346,10 +372,12 @@
     }
 
     function renderPeds(s) {
+        const markerMode = isMarkerMode(s);
+        const displayMode = s.PedSettings.displayMode === 'markers' ? 'markers' : 'peds';
         const pedKeys = Object.keys(s.JobPeds || {});
         const pedsHtml = pedKeys.length
             ? pedKeys.map(k => pedCard(k, s.JobPeds[k], s)).join('')
-            : '<div class="empty-state">Noch keine Outfit-Peds konfiguriert.</div>';
+            : `<div class="empty-state">${markerMode ? 'Noch keine Marker-Positionen konfiguriert.' : 'Noch keine Outfit-Peds konfiguriert.'}</div>`;
 
         const availableForAdd = jobKeys.filter(k => !pedKeys.includes(k));
         const addRow = availableForAdd.length ? `
@@ -360,35 +388,55 @@
                     availableForAdd.includes(pendingAddPedJob) ? pendingAddPedJob : availableForAdd[0],
                     availableForAdd.map(capitalize)
                 )}
-                <button type="button" class="btn" id="addPedBtn">+ Ped hinzufügen</button>
+                <button type="button" class="btn" id="addPedBtn">${markerMode ? '+ Marker hinzufügen' : '+ Ped hinzufügen'}</button>
             </div>` : '';
 
-        return wrapTab(`
+        const pedBehaviorSection = markerMode ? '' : `
         <div class="admin-section">
-            <div class="admin-section__title">Konfigurierte Peds</div>
-            ${pedsHtml}
-            ${addRow}
-        </div>
-        <div class="admin-section">
-            <div class="admin-section__title">Ped-Verhalten (gilt für alle Peds)</div>
+            <div class="admin-section__title">Ped-Verhalten (gilt für alle NPCs)</div>
             <div class="admin-grid admin-grid--narrow">
                 ${checkboxField('ped_freeze', 'PedSettings.freeze', 'Eingefroren', s.PedSettings.freeze)}
                 ${checkboxField('ped_invincible', 'PedSettings.invincible', 'Unverwundbar', s.PedSettings.invincible)}
                 ${checkboxField('ped_block', 'PedSettings.blockEvents', 'Reagiert nicht auf Umgebung', s.PedSettings.blockEvents)}
             </div>
-        </div>
+        </div>`;
+
+        const markerSettingsSection = markerMode ? `
         <div class="admin-section">
-            <div class="admin-section__title">Sichtbarkeit in der Welt</div>
-            <p class="help-text">Marker und Blips helfen beim Platzieren und Finden der Outfit-Peds – unabhängig von der Interaktionsart (Taste oder Target).</p>
+            <div class="admin-section__title">Marker-Einstellungen</div>
+            <p class="help-text">Im Marker-Modus werden keine NPCs gespawnt – nur Boden-Marker an den hinterlegten Positionen.</p>
             <div class="admin-grid">
-                ${checkboxField('ped_marker', 'PedSettings.showMarker', 'Boden-Marker an Ped-Positionen', s.PedSettings.showMarker)}
-                ${checkboxField('ped_blip', 'PedSettings.showBlip', 'Karten-Blips für Outfit-Peds', s.PedSettings.showBlip)}
+                ${checkboxField('ped_blip', 'PedSettings.showBlip', 'Karten-Blips für Marker-Positionen', s.PedSettings.showBlip)}
                 <div class="field">
                     <label>Marker-Sichtweite (Meter)</label>
                     <input type="number" min="5" step="1" data-path="PedSettings.markerDrawDistance" value="${s.PedSettings.markerDrawDistance ?? 30}">
                 </div>
             </div>
-        </div>`);
+        </div>` : '';
+
+        return wrapTab(`
+        <div class="admin-section">
+            <div class="admin-section__title">Anzeige in der Welt</div>
+            <p class="help-text">Entweder Outfit-NPCs <strong>oder</strong> Marker an den Positionen – nicht beides gleichzeitig.</p>
+            <div class="admin-grid admin-grid--single">
+                <div class="field">
+                    <label>Modus</label>
+                    ${customSelect(
+                        'PedSettings.displayMode',
+                        ['peds', 'markers'],
+                        displayMode,
+                        ['Outfit-Peds (NPCs)', 'Marker (ohne NPCs)']
+                    )}
+                </div>
+            </div>
+        </div>
+        <div class="admin-section">
+            <div class="admin-section__title">${markerMode ? 'Marker-Positionen' : 'Konfigurierte Peds'}</div>
+            ${pedsHtml}
+            ${addRow}
+        </div>
+        ${pedBehaviorSection}
+        ${markerSettingsSection}`);
     }
 
     function renderInteraction(s) {
@@ -915,8 +963,11 @@
         applyUiAnimations(state.EnableUiAnimations !== false);
         state.AllowedJobs = state.AllowedJobs || {};
         state.JobPeds = state.JobPeds || {};
-        state.PedSettings = state.PedSettings || { freeze: true, invincible: true, blockEvents: true, showMarker: false, showBlip: false, markerDrawDistance: 30 };
-        if (state.PedSettings.showMarker === undefined) state.PedSettings.showMarker = false;
+        state.PedSettings = state.PedSettings || { freeze: true, invincible: true, blockEvents: true, displayMode: 'peds', showBlip: false, markerDrawDistance: 30 };
+        if (state.PedSettings.displayMode !== 'markers' && state.PedSettings.displayMode !== 'peds') {
+            state.PedSettings.displayMode = state.PedSettings.showMarker === true ? 'markers' : 'peds';
+        }
+        delete state.PedSettings.showMarker;
         if (state.PedSettings.showBlip === undefined) state.PedSettings.showBlip = false;
         if (state.PedSettings.markerDrawDistance === undefined) state.PedSettings.markerDrawDistance = 30;
         state.KeyInteract = state.KeyInteract || { distance: 2.5, drawDistance: 12.0, key: 38, onlyShowForAllowedJobs: true };

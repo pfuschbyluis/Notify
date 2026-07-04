@@ -47,7 +47,7 @@ Config.PedSettings = {
     freeze = true,
     invincible = true,
     blockEvents = true,
-    showMarker = false,
+    displayMode = 'peds', -- 'peds' = NPCs spawnen | 'markers' = nur Marker an den Positionen
     showBlip = false,
     markerDrawDistance = 30.0
 }

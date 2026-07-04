@@ -99,11 +99,19 @@ end
 
 function NS.SanitizePedSettings(v, fallback)
     if type(v) ~= 'table' then return fallback end
+
+    local displayMode = 'peds'
+    if v.displayMode == 'markers' or v.displayMode == 'peds' then
+        displayMode = v.displayMode
+    elseif v.showMarker == true then
+        displayMode = 'markers'
+    end
+
     return {
         freeze = NS.SanitizeBool(v.freeze, fallback and fallback.freeze),
         invincible = NS.SanitizeBool(v.invincible, fallback and fallback.invincible),
         blockEvents = NS.SanitizeBool(v.blockEvents, fallback and fallback.blockEvents),
-        showMarker = NS.SanitizeBool(v.showMarker, fallback and fallback.showMarker),
+        displayMode = displayMode,
         showBlip = NS.SanitizeBool(v.showBlip, fallback and fallback.showBlip),
         markerDrawDistance = NS.SanitizeNumber(v.markerDrawDistance, fallback and fallback.markerDrawDistance)
     }

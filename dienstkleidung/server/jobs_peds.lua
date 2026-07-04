@@ -17,7 +17,7 @@ function NS.SanitizeAllowedJobs(v, fallback)
     return any and out or fallback
 end
 
-function NS.SanitizeJobPeds(v, fallback)
+function NS.SanitizeJobPeds(v, fallback, markerMode)
     if type(v) ~= 'table' then return fallback end
     local out = {}
 
@@ -26,22 +26,18 @@ function NS.SanitizeJobPeds(v, fallback)
             local model = NS.SanitizeString(ped.model, nil)
             local coords = NS.SanitizeCoords(ped.coords, nil)
 
-            if model and coords then
+            if coords and (model or markerMode) then
                 out[jobName] = {
                     enabled = NS.SanitizeBool(ped.enabled, true),
-                    model = model,
+                    model = model or '',
                     coords = coords,
                     scenario = NS.SanitizeString(ped.scenario, ''),
                     label = NS.SanitizeString(ped.label, '[E] Outfit-Menü öffnen')
                 }
             end
-            -- Ungültige einzelne Ped-Einträge werden stillschweigend übersprungen,
-            -- statt die komplette JobPeds-Liste zu verwerfen.
         end
     end
 
-    -- Eine leere Tabelle ist eine gültige, bewusste Konfiguration (Admin hat
-    -- alle Peds entfernt) und darf nicht mehr auf den Fallback zurückfallen.
     return out
 end
 

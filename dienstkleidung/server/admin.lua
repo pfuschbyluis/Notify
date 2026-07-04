@@ -18,8 +18,12 @@ local function ValidateSettings(data)
         if type(data.JobPeds) ~= 'table' then
             return false, 'JobPeds muss ein Objekt sein'
         end
+        local markerMode = type(data.PedSettings) == 'table' and data.PedSettings.displayMode == 'markers'
         for jobName, ped in pairs(data.JobPeds) do
-            if type(ped) ~= 'table' or type(ped.model) ~= 'string' or ped.model == '' then
+            if type(ped) ~= 'table' then
+                return false, ('Ped-Eintrag für "%s" ist ungültig'):format(tostring(jobName))
+            end
+            if not markerMode and (type(ped.model) ~= 'string' or ped.model == '') then
                 return false, ('Ped-Eintrag für "%s" ist unvollständig (Model fehlt)'):format(tostring(jobName))
             end
             if type(ped.coords) ~= 'table' or type(tonumber(ped.coords.x)) ~= 'number'
@@ -104,8 +108,9 @@ RegisterNetEvent('job_outfit:admin:save', function(newSettings)
     NS.ApplyOverridesToConfig()
 
     -- Jobs/Peds liegen in der Datenbank statt in settings.json.
+    local markerMode = type(newSettings.PedSettings) == 'table' and newSettings.PedSettings.displayMode == 'markers'
     local sanitizedJobs = NS.SanitizeAllowedJobs(newSettings.AllowedJobs, NS.Cache.Jobs)
-    local sanitizedPeds = NS.SanitizeJobPeds(newSettings.JobPeds, NS.Cache.Peds)
+    local sanitizedPeds = NS.SanitizeJobPeds(newSettings.JobPeds, NS.Cache.Peds, markerMode)
 
     local dbOk, dbErr = pcall(function()
         NS.SaveJobsToDB(sanitizedJobs)
