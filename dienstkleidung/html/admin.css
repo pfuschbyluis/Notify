@@ -681,6 +681,106 @@
 .clothes-input::placeholder { color: var(--text-3); }
 
 /* ─── Ped card ───────────────────────────────────────────── */
+/* ─── Mode switch (Peds vs. Marker) ──────────────────────── */
+.mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.mode-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    text-align: left;
+    padding: 16px 16px 16px 15px;
+    border-radius: 13px;
+    border: 1px solid var(--border-soft);
+    background: rgba(0,0,0,0.14);
+    color: var(--text-2);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.mode-option:hover {
+    border-color: var(--border);
+    background: rgba(0,0,0,0.24);
+}
+.mode-option.is-active {
+    border-color: var(--accent-line);
+    background: var(--accent-weak);
+    color: var(--text);
+}
+
+.mode-option__icon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: rgba(0,0,0,0.28);
+    color: var(--text-3);
+    transition: background 0.15s, color 0.15s;
+}
+.mode-option.is-active .mode-option__icon {
+    background: var(--accent-mid);
+    color: var(--accent);
+}
+
+.mode-option__text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+}
+.mode-option__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+}
+.mode-option__desc {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-3);
+}
+
+.mode-option__check {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 800;
+    color: #06080f;
+    background: transparent;
+}
+.mode-option.is-active .mode-option__check {
+    background: var(--accent);
+}
+
+.section-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    margin-left: 6px;
+    border-radius: 99px;
+    background: var(--accent-mid);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0;
+    vertical-align: middle;
+}
+
+@media (max-width: 900px) {
+    .mode-switch { grid-template-columns: 1fr; }
+}
+
 .ped-card {
     border: 1px solid var(--border-soft);
     border-radius: 13px;
