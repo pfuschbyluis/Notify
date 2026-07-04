@@ -15,7 +15,15 @@ const closeBtn   = document.getElementById('closeBtn');
 const root       = document.getElementById('root');
 
 const IN_FIVEM = window.location.hostname === 'nui-game-internal';
-const resourceName = IN_FIVEM ? GetParentResourceName() : 'preview';
+let resourceName = 'preview';
+if (IN_FIVEM) {
+    try {
+        resourceName = (typeof GetParentResourceName === 'function') ? GetParentResourceName() : 'UNDEFINED_FN';
+    } catch (e) {
+        resourceName = 'ERROR_' + e.message;
+    }
+}
+console.log('[job_outfit] resourceName =', JSON.stringify(resourceName), '| IN_FIVEM =', IN_FIVEM);
 
 let DEBUG = false;
 function dbg(...args) {
@@ -91,15 +99,16 @@ function animateIn(el, fromX, delay, dur) {
 }
 
 function post(name, data = {}) {
-    dbg('POST ->', name, data);
+    const url = `https://${resourceName}/${name}`;
+    dbg('POST ->', url);
     if (!IN_FIVEM) return Promise.resolve();
-    return fetch(`https://${resourceName}/${name}`, {
+    return fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=UTF-8' },
         body: JSON.stringify(data)
     })
-        .then((res) => dbg('POST ok <-', name, res.status))
-        .catch((err) => console.error('[job_outfit] NUI-Post fehlgeschlagen:', name, err));
+        .then((res) => { dbg('POST ok <-', name, res.status); return res; })
+        .catch((err) => console.error('[job_outfit] NUI-Post FEHLGESCHLAGEN:', url, err && err.message));
 }
 
 function hexToRgb(hex) {

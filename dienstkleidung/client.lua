@@ -1313,3 +1313,17 @@ RegisterNetEvent('job_outfit:admin:outfits:saveError', function(reason)
     SendNUIMessage({ action = 'outfitsSaveError', reason = reason })
     Notify('Outfit-Fehler: ' .. tostring(reason or 'unbekannter Fehler'), 'error')
 end)
+
+-- Diagnose: Ressourcenname beim Start ausgeben. Muss EXAKT mit dem
+-- 'resourceName' aus der NUI-Konsole übereinstimmen, sonst erreichen die
+-- fetch()-Aufrufe (RegisterNUICallback) den Client nie.
+CreateThread(function()
+    print(('^2[job_outfit] Client geladen. GetCurrentResourceName() = "%s"^7'):format(GetCurrentResourceName()))
+    print('^2[job_outfit] NUI-Callbacks registriert: close, selectOutfit, restoreClothes, admin:save, admin:close, admin:getPosition, admin:keepFocus(entfernt), admin:outfits:*^7')
+end)
+
+-- Test-Callback zum Prüfen der JS->Lua-Bbrücke (per NUI aufrufbar).
+RegisterNUICallback('debug:ping', function(_, cb)
+    print('^2[job_outfit] debug:ping empfangen! JS->Lua fetch FUNKTIONIERT.^7')
+    cb('pong')
+end)

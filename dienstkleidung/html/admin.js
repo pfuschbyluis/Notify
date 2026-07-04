@@ -4,7 +4,16 @@
 
 (function () {
     const IN_FIVEM = window.location.hostname === 'nui-game-internal';
-    const resourceName = IN_FIVEM ? GetParentResourceName() : 'preview';
+    let resourceName = 'preview';
+    if (IN_FIVEM) {
+        try {
+            resourceName = (typeof GetParentResourceName === 'function') ? GetParentResourceName() : 'UNDEFINED_FN';
+        } catch (e) {
+            resourceName = 'ERROR_' + e.message;
+        }
+    }
+    // Immer loggen (nicht DEBUG-gated), damit der Resource-Name sofort sichtbar ist.
+    console.log('[job_outfit:admin] resourceName =', JSON.stringify(resourceName), '| IN_FIVEM =', IN_FIVEM);
 
     let DEBUG = false;
 
@@ -13,15 +22,16 @@
     }
 
     function post(name, data = {}) {
-        dbg('POST ->', name, data);
+        const url = `https://${resourceName}/${name}`;
+        dbg('POST ->', url);
         if (!IN_FIVEM) return Promise.resolve();
-        return fetch(`https://${resourceName}/${name}`, {
+        return fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=UTF-8' },
             body: JSON.stringify(data)
         })
-            .then((res) => dbg('POST ok <-', name, res.status))
-            .catch((err) => console.error('[job_outfit:admin] NUI-Post fehlgeschlagen:', name, err));
+            .then((res) => { dbg('POST ok <-', name, res.status); return res; })
+            .catch((err) => console.error('[job_outfit:admin] NUI-Post FEHLGESCHLAGEN:', url, err && err.message));
     }
 
     const app = document.getElementById('adminApp');
@@ -712,6 +722,9 @@
 
         DEBUG = !!data.debug;
         dbg('openAdmin empfangen, DEBUG =', DEBUG);
+        // Automatischer Brücken-Test: wenn dies in der Server-/F8-Konsole
+        // 'debug:ping empfangen' auslöst, funktioniert JS->Lua.
+        post('debug:ping');
         state = JSON.parse(JSON.stringify(data.settings || {}));
         state.AllowedJobs = state.AllowedJobs || {};
         state.JobPeds = state.JobPeds || {};
