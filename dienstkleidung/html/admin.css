@@ -152,7 +152,7 @@
 .sidebar-btn.is-active {
     background: var(--accent-weak);
     color: var(--accent);
-    border-color: rgba(255, 90, 60, 0.18);
+    border-color: var(--accent-mid);
 }
 .sidebar-btn.is-active svg { opacity: 1; }
 
