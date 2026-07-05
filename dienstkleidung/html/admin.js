@@ -349,37 +349,38 @@
     function renderGeneral(s) {
         return wrapTab(`
         <div class="admin-section">
-            <div class="admin-section__title">Grundeinstellungen</div>
+            <div class="admin-section__title">Menü & Kleidung</div>
             <div class="admin-grid">
-                ${checkboxField('f_debug', 'Debug', 'Debug-Ausgaben', s.Debug)}
                 <div class="field">
                     <label>Menü-Typ</label>
                     ${customSelect('MenuType', ['custom', 'ox_lib'], s.MenuType)}
                 </div>
-
                 <div class="field">
                     <label>Kleidungssystem</label>
                     ${customSelect('ClothingSystem', ['skinchanger', 'native'], s.ClothingSystem)}
                 </div>
-                ${checkboxField('f_restore', 'EnableRestoreClothes', 'Zivilkleidung wiederherstellen erlauben', s.EnableRestoreClothes)}
-
-                <div class="field span-2">
+            </div>
+            <div class="admin-grid admin-grid--single">
+                <div class="field">
                     <label>Label „Normale Kleidung anziehen“</label>
                     <input type="text" data-path="RestoreClothesLabel" value="${escapeAttr(s.RestoreClothesLabel)}">
                 </div>
             </div>
         </div>
         <div class="admin-section">
-            <div class="admin-section__title">Darstellung</div>
-            <div class="admin-grid admin-grid--single">
-                ${checkboxField('f_anim', 'EnableUiAnimations', 'Öffnungs-Animationen (Outfit-Menü & Admin-Panel)', s.EnableUiAnimations !== false)}
-                <p class="help-text">Deaktivieren für sofortiges Öffnen ohne Slide/Fade – hilfreich bei empfindlichen Spielern oder schwächeren PCs.</p>
+            <div class="admin-section__title">Optionen</div>
+            <div class="admin-grid">
+                ${checkboxField('f_restore', 'EnableRestoreClothes', 'Zivilkleidung wiederherstellen erlauben', s.EnableRestoreClothes)}
+                ${checkboxField('f_anim', 'EnableUiAnimations', 'Öffnungs-Animationen (Menü & Panel)', s.EnableUiAnimations !== false)}
+                ${checkboxField('f_debug', 'Debug', 'Debug-Ausgaben (nur zur Fehlersuche)', s.Debug)}
             </div>
+        </div>
+        <div class="admin-section">
+            <div class="admin-section__title">Admin-Panel-Farbe</div>
+            <p class="help-text">Feste Farbe des Admin-Panels für alle Admins – unabhängig von den Job-Farben des Outfit-Menüs.</p>
             <div class="admin-grid admin-grid--single">
                 <div class="field">
-                    <label>Admin-Panel-Farbe</label>
                     ${colorField('AdminColor', s.AdminColor, DEFAULT_ADMIN_COLOR)}
-                    <p class="help-text">Feste Farbe des Admin-Panels für alle Admins – unabhängig von den Job-Farben des Outfit-Menüs.</p>
                 </div>
             </div>
         </div>`);
