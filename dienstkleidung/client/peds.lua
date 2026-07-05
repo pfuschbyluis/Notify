@@ -359,6 +359,11 @@ CreateThread(function()
                 local nearestInfo, nearestDist, canInteract = nil, math.huge, false
 
                 for _, pedInfo in ipairs(JobOutfit.State.spawnedPeds) do
+                    -- Marker-Standorte: nur mit ox_lib TextUI interagierbar.
+                    if pedInfo.isMarker and mode ~= 'ox_lib' then
+                        goto continue_ped_scan
+                    end
+
                     local pedCoords
 
                     if pedInfo.entity and DoesEntityExist(pedInfo.entity) then
@@ -385,6 +390,8 @@ CreateThread(function()
                             end
                         end
                     end
+
+                    ::continue_ped_scan::
                 end
 
                 if nearestInfo then

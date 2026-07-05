@@ -14,6 +14,12 @@ end
 local function ValidateSettings(data)
     if type(data) ~= 'table' then return false, 'Ungültiges Format' end
 
+    local markerMode = type(data.PedSettings) == 'table' and data.PedSettings.displayMode == 'markers'
+    local interaction = data.Interaction or Config.Interaction
+    if markerMode and interaction ~= 'ox_lib' then
+        return false, 'Marker-Modus erfordert ox_lib TextUI als Interaktion'
+    end
+
     if data.JobPeds ~= nil then
         if type(data.JobPeds) ~= 'table' then
             return false, 'JobPeds muss ein Objekt sein'

@@ -72,7 +72,7 @@
         },
         interaction: {
             title: 'Interaktion',
-            desc: 'Key (3D-Text über NPC/Marker), ox_lib TextUI (Bildschirm-Prompt) oder ox_target.'
+            desc: 'Key (3D-Text am NPC), ox_lib TextUI (Bildschirm-Prompt, auch für Marker) oder ox_target.'
         }
     };
 
@@ -236,9 +236,9 @@
         return !!(s && s.PedSettings && s.PedSettings.displayMode === 'markers');
     }
 
-    // Marker brauchen Key oder ox_lib Text-UI – nicht ox_target (unsichtbare Zone).
+    // Marker funktionieren nur mit ox_lib Text-UI – nicht Key (3D-Text) oder ox_target.
     function markerAllowed(s) {
-        return s && (s.Interaction === 'key' || s.Interaction === 'ox_lib');
+        return s && s.Interaction === 'ox_lib';
     }
 
     // Einheitliche Begriffe je nach Modus. `variant`:
@@ -544,10 +544,10 @@
         const usesTarget = s.Interaction === 'ox_target';
         const infoSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
         const interactionInfo = usesTarget
-            ? `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>ox_target</strong>. Für Marker empfohlen: unter <strong>Interaktion</strong> auf <strong>Key</strong> oder <strong>ox_lib TextUI</strong> umstellen.</span></div>`
+            ? `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>ox_target</strong>. Für Marker: unter <strong>Interaktion</strong> auf <strong>ox_lib TextUI</strong> umstellen.</span></div>`
             : (s.Interaction === 'ox_lib'
                 ? `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>ox_lib TextUI</strong>: Spieler sehen den Prompt rechts und öffnen das Menü per Taste.</span></div>`
-                : `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>Key (3D-Text)</strong>: Text schwebt über dem NPC/Marker – kein ox_lib-Prompt. Menü öffnen per Taste.</span></div>`);
+                : `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>Key (3D-Text)</strong>: Text schwebt über dem NPC – kein ox_lib-Prompt. Marker sind damit nicht nutzbar.</span></div>`);
 
         const markerSettingsSection = markerMode ? `
         <div class="admin-section">
@@ -585,13 +585,13 @@
                 <span class="mode-option__text">
                     <span class="mode-option__title">Marker (ohne NPCs)</span>
                     <span class="mode-option__desc">${markerLocked
-                        ? 'Benötigt Key oder ox_lib TextUI: erst unter „Interaktion“ umstellen.'
-                        : 'Statt NPCs erscheint ein Boden-Marker – Interaktion per Key oder ox_lib TextUI.'}</span>
+                        ? 'Benötigt ox_lib TextUI: erst unter „Interaktion“ umstellen.'
+                        : 'Statt NPCs erscheint ein Boden-Marker – Interaktion nur per ox_lib TextUI.'}</span>
                 </span>
                 ${markerMode ? activePill : `<span class="mode-option__check">${markerLocked ? lockSvg : ''}</span>`}
             </button>
         </div>
-        ${markerLocked ? `<div class="mode-warning">${lockSvg}<span>Marker funktionieren nur mit <strong>Key</strong> oder <strong>ox_lib TextUI</strong>. Stelle zuerst unter <strong>Interaktion</strong> um – mit <strong>ox_target</strong> gäbe es nur eine unsichtbare Zielzone.</span></div>` : ''}`;
+        ${markerLocked ? `<div class="mode-warning">${lockSvg}<span>Marker funktionieren nur mit <strong>ox_lib TextUI</strong>. Stelle zuerst unter <strong>Interaktion</strong> den Modus auf <strong>ox_lib TextUI</strong> um – mit <strong>Key</strong> oder <strong>ox_target</strong> geht der Marker-Modus nicht.</span></div>` : ''}`;
 
         const countLabel = pedKeys.length
             ? `<span class="section-count">${pedKeys.length}</span>`
@@ -642,7 +642,7 @@
         const markerModeActive = isMarkerMode(s);
         const infoSvg2 = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
         const markerHint = markerModeActive
-            ? `<div class="info-banner">${infoSvg2}<span>Der Marker-Modus ist aktiv – dafür wird <strong>Key</strong> oder <strong>ox_lib TextUI</strong> benötigt. Ein Wechsel auf <strong>ox_target</strong> ist nicht möglich.</span></div>`
+            ? `<div class="info-banner">${infoSvg2}<span>Der Marker-Modus ist aktiv – dafür wird <strong>ox_lib TextUI</strong> benötigt. Ein Wechsel auf <strong>Key</strong> oder <strong>ox_target</strong> ist nicht möglich.</span></div>`
             : '';
 
         return wrapTab(`
@@ -907,8 +907,8 @@
                 pendingAddPedJob = value;
             } else if (path === '__outfitsJob') {
                 fetchOutfitsList(value, { silent: true });
-            } else if (path === 'Interaction' && value === 'ox_target' && isMarkerMode(state)) {
-                // Marker brauchen Key – ox_target hier blockieren.
+            } else if (path === 'Interaction' && isMarkerMode(state) && (value === 'ox_target' || value === 'key')) {
+                // Marker brauchen ox_lib TextUI – Key und ox_target blockieren.
                 render();
                 return;
             } else {
@@ -944,7 +944,7 @@
         if (modeBtn) {
             const mode = modeBtn.getAttribute('data-set-mode');
             state.PedSettings = state.PedSettings || {};
-            // Marker nur erlauben, wenn Key-Interaktion aktiv ist.
+            // Marker nur erlauben, wenn ox_lib TextUI aktiv ist.
             if (mode === 'markers' && !markerAllowed(state)) {
                 render();
                 return;
