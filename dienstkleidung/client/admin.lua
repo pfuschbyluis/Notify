@@ -50,10 +50,6 @@ local function ApplyClientSettings(settings)
         end
     end
 
-    if settings.Debug ~= nil then
-        JobOutfit.State.debugEnabled = nil
-    end
-
     -- Erster Sync nach Resource-Start: nur Config setzen, Spawn macht peds.lua.
     if pedsChanged and hadSync then
         JobOutfit.Peds.DeleteAll()

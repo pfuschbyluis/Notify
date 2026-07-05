@@ -32,18 +32,12 @@ JobOutfit.State = {
     outfitMenuOpen = false,
     adminMenuOpen = false,
     lastFocusReason = 'init',
-
-    -- Laufzeit-Debug-Override (unabhängig von Config.Debug, per /outfitdebug togglebar)
-    debugEnabled = nil, -- nil = Config.Debug verwenden
-    debugHud = false,
 }
 
 -- ------------------------------------------------------------
 -- Debug-System
 -- ------------------------------------------------------------
 function JobOutfit.IsDebug()
-    local s = JobOutfit.State
-    if s.debugEnabled ~= nil then return s.debugEnabled end
     return Config.Debug == true
 end
 
@@ -59,9 +53,8 @@ end
 -- desiredFocus = was wir WOLLEN. Ein dauerhafter Thread gleicht den
 -- TATSÄCHLICHEN Fokus (IsNuiFocused) frame-genau mit desiredFocus ab.
 -- Grund: SetNuiFocus(false) innerhalb eines RegisterNUICallback wird von
--- FiveM-CEF gelegentlich ignoriert (deshalb ging /outfitunstuck, aber ein
--- Klick auf Schließen nicht). Die Reconciliation läuft im normalen
--- Thread-Kontext und wirkt daher immer.
+-- FiveM-CEF gelegentlich ignoriert. Die Reconciliation läuft im normalen
+-- Thread-Kontext und wirkt daher zuverlässiger.
 function JobOutfit.SetDesiredFocus(state, reason)
     local s = JobOutfit.State
     s.desiredFocus = state == true
@@ -149,12 +142,6 @@ CreateThread(function()
         end
     end
 end)
-
--- Not-Aus: setzt NUI-Fokus bedingungslos zurück und schließt beide Menüs,
--- falls die Maus aus irgendeinem Grund in der UI hängen bleiben sollte.
-RegisterCommand('outfitunstuck', function()
-    JobOutfit.CloseAllNui()
-end, false)
 
 -- ------------------------------------------------------------
 -- ESX-Bootstrap
