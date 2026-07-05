@@ -91,7 +91,7 @@ RegisterNetEvent('job_outfit:admin:openRequest', function()
     end
     table.sort(jobKeys)
 
-    TriggerClientEvent('job_outfit:admin:openPanel', src, BuildClientSettings(), jobKeys, configuredJobs, jobLabels)
+    TriggerClientEvent('job_outfit:admin:openPanel', src, BuildClientSettings(), jobKeys, configuredJobs, jobLabels, NS.HasValidJobList())
 end)
 
 RegisterNetEvent('job_outfit:admin:save', function(newSettings)
@@ -143,6 +143,45 @@ RegisterNetEvent('job_outfit:admin:save', function(newSettings)
     local synced = BuildClientSettings()
     TriggerClientEvent('job_outfit:admin:sync', -1, synced)
     TriggerClientEvent('job_outfit:admin:saved', src)
+end)
+
+-- Entfernt einen Job komplett aus allen Tabellen (Jobs, Peds, Outfits).
+-- Gedacht für „verwaiste“ Jobs, die es in der ESX-`jobs`-Tabelle nicht mehr
+-- gibt, aber noch als Alt-Konfiguration herumliegen.
+RegisterNetEvent('job_outfit:admin:deleteJob', function(jobName)
+    local src = source
+
+    if not NS.IsAdminAllowed(src) then
+        TriggerClientEvent('job_outfit:admin:denied', src)
+        return
+    end
+
+    if not NS.IsSafeJobKey(jobName) then
+        TriggerClientEvent('job_outfit:admin:saveError', src, 'Ungültiger Job')
+        return
+    end
+
+    local ok, err = pcall(function()
+        MySQL.query.await('DELETE FROM `multijob_outfit_jobs` WHERE job_name = ?', { jobName })
+        MySQL.query.await('DELETE FROM `multijob_outfit_peds` WHERE job_name = ?', { jobName })
+        MySQL.query.await('DELETE FROM `multijob_outfit_outfits` WHERE job_name = ?', { jobName })
+    end)
+
+    if not ok then
+        print('[job_outfit] DB-Fehler beim Entfernen eines Jobs: ' .. tostring(err))
+        TriggerClientEvent('job_outfit:admin:saveError', src, 'Job konnte nicht entfernt werden (DB-Fehler)')
+        return
+    end
+
+    NS.ReloadAllCaches()
+    Config.AllowedJobs = NS.Cache.Jobs
+    Config.JobPeds = NS.Cache.Peds
+
+    local synced = BuildClientSettings()
+    TriggerClientEvent('job_outfit:admin:sync', -1, synced)
+    TriggerClientEvent('job_outfit:admin:jobDeleted', src, jobName)
+
+    print(('[job_outfit] Job "%s" wurde vollständig aus der Datenbank entfernt.'):format(tostring(jobName)))
 end)
 
 -- Reset betrifft nur die allgemeinen/statischen Felder (settings.json).

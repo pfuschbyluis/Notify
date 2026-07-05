@@ -80,8 +80,16 @@
     let jobKeys = [];
     let configuredJobs = {};
     let jobLabels = {};
+    let restrictJobs = false;
     let activeTab = 'general';
     let pendingAddPedJob = null;
+
+    // "Verwaist" = Job wird in unseren Tabellen geführt, existiert aber nicht
+    // (mehr) in der echten Jobliste der Datenbank. Nur wenn eine echte Liste
+    // vorliegt (restrictJobs), können wir das überhaupt feststellen.
+    function isOrphanJob(key) {
+        return restrictJobs && !(jobLabels && jobLabels[key]);
+    }
 
     // Zeigt den echten Job-Namen (Label aus der DB), sonst der Schlüssel großgeschrieben.
     function jobLabel(key) {
@@ -455,16 +463,25 @@
     }
 
     function renderJobs(s) {
+        const trashSvg = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>';
         const allowedHtml = jobKeys.map(k => {
             const isConfigured = configuredJobs[k] !== false;
+            const orphan = isOrphanJob(k);
             const safeKey = escapeAttr(k);
+            const badge = orphan
+                ? '<span class="job-badge-warn job-badge-warn--danger" title="Dieser Job existiert nicht (mehr) in der Datenbank">Nicht in der Datenbank</span>'
+                : (isConfigured ? '' : '<span class="job-badge-warn" title="Für diesen Job sind keine Kleidungsdaten hinterlegt">Nicht konfiguriert</span>');
+            const deleteBtn = orphan
+                ? `<button type="button" class="job-toggle__delete" data-delete-job="${safeKey}" title="Job samt Peds/Outfits vollständig entfernen">${trashSvg}<span>Entfernen</span></button>`
+                : '';
             return `
-            <label class="job-toggle ${isConfigured ? '' : 'is-unconfigured'}">
+            <label class="job-toggle ${isConfigured ? '' : 'is-unconfigured'} ${orphan ? 'is-orphan' : ''}">
                 <div class="job-toggle__top">
-                    <input type="checkbox" data-path="AllowedJobs.${safeKey}" ${s.AllowedJobs[k] ? 'checked' : ''}>
+                    <input type="checkbox" data-path="AllowedJobs.${safeKey}" ${s.AllowedJobs[k] ? 'checked' : ''} ${orphan ? 'disabled' : ''}>
                     <span class="job-toggle__name">${escapeAttr(jobLabel(k))}</span>
                 </div>
-                ${isConfigured ? '' : '<span class="job-badge-warn" title="Für diesen Job sind keine Kleidungsdaten hinterlegt">Nicht konfiguriert</span>'}
+                ${badge}
+                ${deleteBtn}
             </label>`;
         }).join('');
 
@@ -851,6 +868,23 @@
             return;
         }
 
+        const deleteJobBtn = e.target.closest && e.target.closest('[data-delete-job]');
+        if (deleteJobBtn) {
+            e.preventDefault();
+            const key = deleteJobBtn.getAttribute('data-delete-job');
+            if (key) {
+                post('admin:deleteJob', { job: key });
+                jobKeys = jobKeys.filter(j => j !== key);
+                if (state.AllowedJobs) delete state.AllowedJobs[key];
+                if (state.JobPeds) delete state.JobPeds[key];
+                if (state.JobColors) delete state.JobColors[key];
+                if (jobLabels) delete jobLabels[key];
+                if (configuredJobs) delete configuredJobs[key];
+                render();
+            }
+            return;
+        }
+
         const swatch = e.target.closest && e.target.closest('[data-color-value]');
         if (swatch) {
             const path = swatch.dataset.colorPath;
@@ -1138,6 +1172,20 @@
             return;
         }
 
+        if (data.action === 'adminJobDeleted') {
+            const key = data.job;
+            if (key && state) {
+                jobKeys = jobKeys.filter(j => j !== key);
+                if (state.AllowedJobs) delete state.AllowedJobs[key];
+                if (state.JobPeds) delete state.JobPeds[key];
+                if (state.JobColors) delete state.JobColors[key];
+                if (jobLabels) delete jobLabels[key];
+                if (configuredJobs) delete configuredJobs[key];
+                if (!app.classList.contains('hidden')) render();
+            }
+            return;
+        }
+
         if (data.action !== 'openAdmin') return;
 
         DEBUG = !!data.debug;
@@ -1175,6 +1223,7 @@
         });
         configuredJobs = data.configuredJobs || {};
         jobLabels = data.jobLabels || {};
+        restrictJobs = data.restrictJobs === true;
         pendingAddPedJob = null;
         outfitsUi = { selectedJob: jobKeys[0] || null, list: [], loading: false, editing: null };
 

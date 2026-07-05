@@ -78,7 +78,7 @@ RegisterNetEvent('job_outfit:admin:saveError', function(reason)
     JobOutfit.Notify('Speichern fehlgeschlagen: ' .. tostring(reason or 'unbekannter Fehler'), 'error')
 end)
 
-RegisterNetEvent('job_outfit:admin:openPanel', function(settings, jobKeys, configuredJobs, jobLabels)
+RegisterNetEvent('job_outfit:admin:openPanel', function(settings, jobKeys, configuredJobs, jobLabels, restrictJobs)
     JobOutfit.Debug('Server-Event: openPanel', 'ADMIN')
     JobOutfit.State.adminMenuOpen = true
     JobOutfit.SetNuiOpen(true, 'openPanel')
@@ -89,8 +89,14 @@ RegisterNetEvent('job_outfit:admin:openPanel', function(settings, jobKeys, confi
         settings = settings,
         jobKeys = jobKeys or {},
         configuredJobs = configuredJobs or {},
-        jobLabels = jobLabels or {}
+        jobLabels = jobLabels or {},
+        restrictJobs = restrictJobs == true
     })
+end)
+
+RegisterNetEvent('job_outfit:admin:jobDeleted', function(jobName)
+    SendNUIMessage({ action = 'adminJobDeleted', job = jobName })
+    JobOutfit.Notify(('Job „%s" wurde entfernt.'):format(tostring(jobName)), 'success')
 end)
 
 CreateThread(function()
@@ -121,6 +127,13 @@ end)
 RegisterNUICallback('admin:close', function(_, cb)
     JobOutfit.Debug('NUI-Callback: admin:close', 'NUI')
     JobOutfit.CloseAdminPanel()
+    cb('ok')
+end)
+
+RegisterNUICallback('admin:deleteJob', function(data, cb)
+    if type(data) == 'table' and type(data.job) == 'string' then
+        TriggerServerEvent('job_outfit:admin:deleteJob', data.job)
+    end
     cb('ok')
 end)
 
