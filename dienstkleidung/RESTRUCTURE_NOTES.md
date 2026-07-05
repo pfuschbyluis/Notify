@@ -23,7 +23,7 @@ wichtig (core.lua zuerst, bootstrap.lua zuletzt) und mit Kommentaren dokumentier
 ## server.lua (815 Zeilen, eine Datei) → 5 fokussierte Module
 
 - `server/settings_store.lua` – Namespace (`JobOutfitServer`), `settings.json`-Persistenz, generische Sanitizer
-- `server/database.lua` – Tabellen anlegen, Erstmigration aus `db_seed.lua`, Caches (Jobs/Peds/Outfits)
+- `server/database.lua` – Tabellen anlegen, Caches (Jobs/Peds/Outfits)
 - `server/jobs_peds.lua` – Schreibzugriffe für Jobs/Peds (Sanitizing + DB)
 - `server/outfits.lua` – Outfits-Auslieferung an Clients + Admin-CRUD
 - `server/admin.lua` – Admin-Auth, Validierung, Settings-Sync/Speichern/Reset
@@ -33,7 +33,7 @@ Gleiches Prinzip: globaler Namespace `JobOutfitServer` mit `JobOutfitServer.Cach
 
 ## Unverändert
 
-- `config.lua` (bis auf entfernten VMS-Block, siehe unten), `db_seed.lua`, `install.sql`
+- `config.lua` (bis auf entfernten VMS-Block, siehe unten), `install.sql`
 - `html/` (index.html, script.js, admin.js, style.css, admin.css, Main.ttf) –
   alle NUI-Callback-Namen sind identisch geblieben, daher war hier keine
   Anpassung nötig.

@@ -1,5 +1,5 @@
 -- ============================================================
--- database.lua – Tabellen, Erstmigration, Caches
+-- database.lua – Tabellen anlegen, Caches
 -- ============================================================
 
 local NS = JobOutfitServer
@@ -29,14 +29,6 @@ local function EnsureTables()
     ]])
 
     MySQL.query.await([[
-        CREATE TABLE IF NOT EXISTS `multijob_outfit_meta` (
-            `meta_key` VARCHAR(64) NOT NULL,
-            `meta_value` VARCHAR(255) NOT NULL,
-            PRIMARY KEY (`meta_key`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    ]])
-
-    MySQL.query.await([[
         CREATE TABLE IF NOT EXISTS `multijob_outfit_outfits` (
             `id` INT NOT NULL AUTO_INCREMENT,
             `job_name` VARCHAR(50) NOT NULL,
@@ -49,126 +41,6 @@ local function EnsureTables()
             KEY `idx_job_grade` (`job_name`, `grade`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ]])
-end
-
--- Gleiche Normalisierung wie clientseitig: eine Rang-Konfiguration kann als
--- Liste mehrerer Outfits, als einzelnes Outfit oder als { outfits = {...} }
--- vorliegen. Wird nur für den einmaligen Import aus db_seed.lua gebraucht.
-local function NormalizeOutfitList(entry)
-    if not entry then return nil end
-    if type(entry) == 'table' and entry[1] ~= nil then return entry end
-    if type(entry) == 'table' and (entry.male or entry.female or entry.label) then return { entry } end
-    if type(entry) == 'table' and type(entry.outfits) == 'table' then return entry.outfits end
-    return nil
-end
-
-local function LoadSeedData()
-    local raw = LoadResourceFile(GetCurrentResourceName(), 'db_seed.lua')
-    if not raw or raw == '' then return nil end
-
-    local chunk, loadErr = load(raw, '@db_seed.lua')
-    if not chunk then
-        print('[job_outfit] db_seed.lua konnte nicht geladen werden: ' .. tostring(loadErr))
-        return nil
-    end
-
-    local ok, seed = pcall(chunk)
-    if not ok or type(seed) ~= 'table' then
-        print('[job_outfit] db_seed.lua lieferte keine gültigen Daten: ' .. tostring(seed))
-        return nil
-    end
-
-    return seed
-end
-
-local META_LEGACY_SEED = 'legacy_seed_imported'
-
-function NS.GetMeta(key)
-    local value = MySQL.scalar.await('SELECT meta_value FROM `multijob_outfit_meta` WHERE meta_key = ? LIMIT 1', { key })
-    return value
-end
-
-function NS.SetMeta(key, value)
-    MySQL.query.await(
-        'INSERT INTO `multijob_outfit_meta` (meta_key, meta_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE meta_value = VALUES(meta_value)',
-        { key, tostring(value) }
-    )
-end
-
--- Läuft höchstens einmal überhaupt: danach steht legacy_seed_imported in der DB.
--- Beim normalen Resource-Restart wird die Datenbank NUR gelesen, nie wieder
--- mit db_seed.lua befüllt – auch nicht, wenn die Tabellen später leer sind.
-local function RunFirstTimeMigration()
-    if NS.GetMeta(META_LEGACY_SEED) == '1' then
-        return
-    end
-
-    local count = MySQL.scalar.await('SELECT COUNT(*) FROM `multijob_outfit_jobs`')
-    if tonumber(count) and tonumber(count) > 0 then
-        NS.SetMeta(META_LEGACY_SEED, '1')
-        return
-    end
-
-    local seed = LoadSeedData()
-    if not seed then
-        print('[job_outfit] Keine db_seed.lua gefunden oder leer - Datenbank bleibt leer. Bitte Jobs/Peds/Outfits über /outfitadmin anlegen.')
-        NS.SetMeta(META_LEGACY_SEED, '1')
-        return
-    end
-
-    print('[job_outfit] Erstinstallation: importiere Legacy-Daten aus db_seed.lua einmalig in die Datenbank ...')
-
-    local jobCount = 0
-    for jobName, enabled in pairs(seed.AllowedJobs or {}) do
-        if NS.IsSafeJobKey(jobName) then
-            MySQL.insert.await('INSERT INTO `multijob_outfit_jobs` (job_name, enabled) VALUES (?, ?)', { jobName, enabled and 1 or 0 })
-            jobCount = jobCount + 1
-        end
-    end
-
-    local pedCount = 0
-    for jobName, ped in pairs(seed.JobPeds or {}) do
-        if NS.IsSafeJobKey(jobName) and type(ped) == 'table' then
-            local c = ped.coords or {}
-            MySQL.insert.await(
-                'INSERT INTO `multijob_outfit_peds` (job_name, enabled, model, coord_x, coord_y, coord_z, heading, scenario, label) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                {
-                    jobName, ped.enabled and 1 or 0, ped.model or '',
-                    tonumber(c.x) or 0.0, tonumber(c.y) or 0.0, tonumber(c.z) or 0.0, tonumber(c.w) or 0.0,
-                    ped.scenario or '', ped.label or '[E] Outfit-Menü öffnen'
-                }
-            )
-            pedCount = pedCount + 1
-        end
-    end
-
-    local outfitCount = 0
-    for jobName, grades in pairs(seed.Outfits or {}) do
-        if NS.IsSafeJobKey(jobName) and type(grades) == 'table' then
-            for gradeKey, gradeEntry in pairs(grades) do
-                local grade = tonumber(gradeKey) or 0
-                local outfits = NormalizeOutfitList(gradeEntry)
-
-                if outfits then
-                    for sortOrder, outfit in ipairs(outfits) do
-                        if type(outfit) == 'table' then
-                            local maleJson = (type(outfit.male) == 'table' and next(outfit.male)) and json.encode(outfit.male) or nil
-                            local femaleJson = (type(outfit.female) == 'table' and next(outfit.female)) and json.encode(outfit.female) or nil
-
-                            MySQL.insert.await(
-                                'INSERT INTO `multijob_outfit_outfits` (job_name, grade, label, sort_order, male_clothes, female_clothes) VALUES (?, ?, ?, ?, ?, ?)',
-                                { jobName, grade, outfit.label or ('Outfit ' .. sortOrder), sortOrder, maleJson, femaleJson }
-                            )
-                            outfitCount = outfitCount + 1
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    print(('[job_outfit] Migration abgeschlossen: %d Jobs, %d Peds, %d Outfits importiert.'):format(jobCount, pedCount, outfitCount))
-    NS.SetMeta(META_LEGACY_SEED, '1')
 end
 
 function NS.ReloadJobsCache()
@@ -276,7 +148,6 @@ NS.DbReady = false
 
 CreateThread(function()
     EnsureTables()
-    RunFirstTimeMigration()
     NS.ReloadAllCaches()
 
     Config.AllowedJobs = NS.Cache.Jobs

@@ -101,7 +101,4 @@ Config.JobPeds = {}
 -- Alle drei Tabellen kannst du komplett über das Admin-Panel (/outfitadmin)
 -- verwalten: Jobs an/ausschalten, Outfit-Peds platzieren, Outfits (Kleidung)
 -- pro Job und Rang anlegen/bearbeiten/löschen.
---
--- Beim allerersten Start (einmalig, mit DB-Flag) können Legacy-Daten aus
--- `db_seed.lua` importiert werden. Bei jedem normalen Resource-Restart wird
--- die Datenbank nur gelesen – es wird nichts aus db_seed.lua nachgeladen.
+-- Beim Resource-Restart wird die Datenbank nur gelesen, nicht beschrieben.
