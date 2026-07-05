@@ -236,7 +236,7 @@
         return !!(s && s.PedSettings && s.PedSettings.displayMode === 'markers');
     }
 
-    // Marker brauchen die Tasten-Interaktion (ox_lib Text-UI). Mit ox_target
+    // Marker brauchen die Key-Interaktion (ox_lib Text-UI). Mit ox_target
     // gäbe es nur eine unsichtbare Zielzone – das sieht in der Welt schlecht aus.
     function markerAllowed(s) {
         return s && s.Interaction === 'key';
@@ -550,8 +550,8 @@
         const usesTarget = s.Interaction === 'ox_target';
         const infoSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
         const interactionInfo = usesTarget
-            ? `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>ox_target</strong>: An jedem Marker wird automatisch eine unsichtbare Ziel-Zone erstellt – Spieler schauen den Marker an und wählen die Option. Alternativ kannst du unter <strong>Interaktion</strong> auf <strong>Tastendruck</strong> umstellen, dann öffnet sich das Menü per Taste in der Nähe.</span></div>`
-            : `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>Tastendruck</strong>: Spieler öffnen das Menü mit der eingestellten Taste, sobald sie nah am Marker stehen.</span></div>`;
+            ? `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>ox_target</strong>: An jedem Marker wird automatisch eine unsichtbare Ziel-Zone erstellt. Für Marker empfohlen: unter <strong>Interaktion</strong> auf <strong>Key</strong> umstellen.</span></div>`
+            : `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>Key</strong>: Spieler öffnen das Menü mit der eingestellten Taste, sobald sie in der Nähe sind (ox_lib Text-UI).</span></div>`;
 
         const markerSettingsSection = markerMode ? `
         <div class="admin-section">
@@ -589,13 +589,13 @@
                 <span class="mode-option__text">
                     <span class="mode-option__title">Marker (ohne NPCs)</span>
                     <span class="mode-option__desc">${markerLocked
-                        ? 'Benötigt die Text-UI: erst unter „Interaktion“ auf „Tastendruck (Text-UI)“ umstellen.'
-                        : 'Statt NPCs erscheint ein Boden-Marker mit Text-UI-Prompt an den Standorten.'}</span>
+                        ? 'Benötigt Key: erst unter „Interaktion“ auf „Key“ umstellen.'
+                        : 'Statt NPCs erscheint ein Boden-Marker mit Key-Prompt (ox_lib Text-UI) an den Standorten.'}</span>
                 </span>
                 ${markerMode ? activePill : `<span class="mode-option__check">${markerLocked ? lockSvg : ''}</span>`}
             </button>
         </div>
-        ${markerLocked ? `<div class="mode-warning">${lockSvg}<span>Marker funktionieren nur mit der <strong>Text-UI</strong>. Stelle zuerst unter <strong>Interaktion</strong> den Modus auf <strong>„Tastendruck (Text-UI)“</strong> um – danach lässt sich der Marker-Modus aktivieren. Mit <strong>ox_target</strong> gäbe es nur eine unsichtbare Zielzone.</span></div>` : ''}`;
+        ${markerLocked ? `<div class="mode-warning">${lockSvg}<span>Marker funktionieren nur mit <strong>Key</strong>-Interaktion. Stelle zuerst unter <strong>Interaktion</strong> den Modus auf <strong>„Key“</strong> um – danach lässt sich der Marker-Modus aktivieren. Mit <strong>ox_target</strong> gäbe es nur eine unsichtbare Zielzone.</span></div>` : ''}`;
 
         const countLabel = pedKeys.length
             ? `<span class="section-count">${pedKeys.length}</span>`
@@ -620,11 +620,12 @@
     function renderInteraction(s) {
         const keySection = s.Interaction === 'key' ? `
         <div class="admin-section">
-            <div class="admin-section__title">Tasten-Interaktion</div>
+            <div class="admin-section__title">Key-Interaktion</div>
+            <p class="help-text">Spieler sehen den Prompt (ox_lib Text-UI) ab der Sichtweite und können in Interaktions-Distanz mit der Taste das Menü öffnen.</p>
             <div class="admin-grid admin-grid--narrow">
-                <div class="field"><label>Distanz</label><input type="number" step="0.1" data-path="KeyInteract.distance" value="${s.KeyInteract.distance}"></div>
-                <div class="field"><label>Sichtweite</label><input type="number" step="0.1" data-path="KeyInteract.drawDistance" value="${s.KeyInteract.drawDistance}"></div>
-                <div class="field"><label>Taste (Control-ID)</label><input type="number" data-path="KeyInteract.key" value="${s.KeyInteract.key}"></div>
+                <div class="field"><label>Interaktions-Distanz</label><input type="number" step="0.1" data-path="KeyInteract.distance" value="${s.KeyInteract.distance}"></div>
+                <div class="field"><label>Sichtweite (Prompt)</label><input type="number" step="0.1" data-path="KeyInteract.drawDistance" value="${s.KeyInteract.drawDistance}"></div>
+                <div class="field"><label>Taste (Control-ID, z. B. 38 = E)</label><input type="number" data-path="KeyInteract.key" value="${s.KeyInteract.key}"></div>
                 <div class="span-3">${checkboxField('key_allowed', 'KeyInteract.onlyShowForAllowedJobs', 'Nur für berechtigte Jobs anzeigen', s.KeyInteract.onlyShowForAllowedJobs)}</div>
             </div>
         </div>` : `
@@ -640,7 +641,7 @@
         const markerModeActive = isMarkerMode(s);
         const infoSvg2 = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
         const markerHint = markerModeActive
-            ? `<div class="info-banner">${infoSvg2}<span>Der Marker-Modus ist aktiv – dafür wird die <strong>Tastendruck (Text-UI)</strong>-Interaktion benötigt. Ein Wechsel auf <strong>ox_target</strong> ist hier nicht möglich, solange Marker aktiv sind.</span></div>`
+            ? `<div class="info-banner">${infoSvg2}<span>Der Marker-Modus ist aktiv – dafür wird die <strong>Key</strong>-Interaktion benötigt. Ein Wechsel auf <strong>ox_target</strong> ist hier nicht möglich, solange Marker aktiv sind.</span></div>`
             : '';
 
         return wrapTab(`
@@ -650,7 +651,7 @@
             <div class="admin-grid admin-grid--single">
                 <div class="field">
                     <label>Modus</label>
-                    ${customSelect('Interaction', ['key', 'ox_target'], s.Interaction, ['Tastendruck (Text-UI)', 'ox_target'])}
+                    ${customSelect('Interaction', ['key', 'ox_target'], s.Interaction, ['Key', 'ox_target'])}
                 </div>
             </div>
         </div>
@@ -906,7 +907,7 @@
             } else if (path === '__outfitsJob') {
                 fetchOutfitsList(value, { silent: true });
             } else if (path === 'Interaction' && value === 'ox_target' && isMarkerMode(state)) {
-                // Marker brauchen die Text-UI – ox_target hier blockieren.
+                // Marker brauchen Key – ox_target hier blockieren.
                 render();
                 return;
             } else {
@@ -942,7 +943,7 @@
         if (modeBtn) {
             const mode = modeBtn.getAttribute('data-set-mode');
             state.PedSettings = state.PedSettings || {};
-            // Marker nur erlauben, wenn die Text-UI (Tastendruck) aktiv ist.
+            // Marker nur erlauben, wenn Key-Interaktion aktiv ist.
             if (mode === 'markers' && !markerAllowed(state)) {
                 render();
                 return;

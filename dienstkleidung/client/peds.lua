@@ -344,11 +344,12 @@ CreateThread(function()
             else
                 local playerCoords = GetEntityCoords(playerPed)
                 local keyCfg = Config.KeyInteract or {}
+                local drawDistance = tonumber(keyCfg.drawDistance) or 12.0
                 local interactDistance = tonumber(keyCfg.distance) or 2.5
                 local interactKey = tonumber(keyCfg.key) or 38
 
-                -- Nächstliegenden Punkt in Reichweite finden.
-                local nearestInfo, nearestDist = nil, math.huge
+                -- Nächstliegenden Punkt in Sichtweite finden; Taste nur in Interaktions-Distanz.
+                local nearestInfo, nearestDist, canInteract = nil, math.huge, false
 
                 for _, pedInfo in ipairs(JobOutfit.State.spawnedPeds) do
                     local pedCoords
@@ -362,7 +363,7 @@ CreateThread(function()
                     if pedCoords then
                         local distance = #(playerCoords - pedCoords)
 
-                        if distance <= interactDistance then
+                        if distance <= drawDistance then
                             local show = true
 
                             if keyCfg.onlyShowForAllowedJobs then
@@ -373,6 +374,7 @@ CreateThread(function()
                             if show and distance < nearestDist then
                                 nearestDist = distance
                                 nearestInfo = pedInfo
+                                canInteract = distance <= interactDistance
                             end
                         end
                     end
@@ -381,7 +383,7 @@ CreateThread(function()
                 if nearestInfo then
                     sleep = 0
                     ShowInteractTextUI(nearestInfo.label or 'Outfit-Menü öffnen')
-                    if IsControlJustReleased(0, interactKey) then
+                    if canInteract and IsControlJustReleased(0, interactKey) then
                         JobOutfit.Menu.Open(nearestInfo.job)
                     end
                 else
