@@ -236,6 +236,12 @@
         return !!(s && s.PedSettings && s.PedSettings.displayMode === 'markers');
     }
 
+    // Marker brauchen die Tasten-Interaktion (ox_lib Text-UI). Mit ox_target
+    // gäbe es nur eine unsichtbare Zielzone – das sieht in der Welt schlecht aus.
+    function markerAllowed(s) {
+        return s && s.Interaction === 'key';
+    }
+
     // Einheitliche Begriffe je nach Modus. `variant`:
     //   'one'   -> "Marker" / "Outfit-Ped"
     //   'many'  -> "Marker" / "Outfit-Peds"
@@ -563,7 +569,10 @@
         const pedIcon = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
         const markerIcon = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>';
 
+        const canMarker = markerAllowed(s);
+        const lockSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
         const activePill = '<span class="mode-option__badge">Aktiv</span>';
+        const markerLocked = !markerMode && !canMarker;
         const modeSwitch = `
         <div class="mode-switch">
             <button type="button" class="mode-option ${!markerMode ? 'is-active' : ''}" data-set-mode="peds">
@@ -574,15 +583,18 @@
                 </span>
                 ${!markerMode ? activePill : '<span class="mode-option__check"></span>'}
             </button>
-            <button type="button" class="mode-option ${markerMode ? 'is-active' : ''}" data-set-mode="markers">
-                <span class="mode-option__icon">${markerIcon}</span>
+            <button type="button" class="mode-option ${markerMode ? 'is-active' : ''} ${markerLocked ? 'is-locked' : ''}" data-set-mode="markers">
+                <span class="mode-option__icon">${markerLocked ? lockSvg : markerIcon}</span>
                 <span class="mode-option__text">
                     <span class="mode-option__title">Marker (ohne NPCs)</span>
-                    <span class="mode-option__desc">Statt NPCs erscheint ein Boden-Marker an den Standorten.</span>
+                    <span class="mode-option__desc">${markerLocked
+                        ? 'Benötigt die Text-UI: erst unter „Interaktion“ auf „Tastendruck (Text-UI)“ umstellen.'
+                        : 'Statt NPCs erscheint ein Boden-Marker mit Text-UI-Prompt an den Standorten.'}</span>
                 </span>
-                ${markerMode ? activePill : '<span class="mode-option__check"></span>'}
+                ${markerMode ? activePill : `<span class="mode-option__check">${markerLocked ? lockSvg : ''}</span>`}
             </button>
-        </div>`;
+        </div>
+        ${markerLocked ? `<div class="mode-warning">${lockSvg}<span>Marker funktionieren nur mit der <strong>Text-UI</strong>. Stelle zuerst unter <strong>Interaktion</strong> den Modus auf <strong>„Tastendruck (Text-UI)“</strong> um – danach lässt sich der Marker-Modus aktivieren. Mit <strong>ox_target</strong> gäbe es nur eine unsichtbare Zielzone.</span></div>` : ''}`;
 
         const countLabel = pedKeys.length
             ? `<span class="section-count">${pedKeys.length}</span>`
@@ -624,13 +636,20 @@
             </div>
         </div>`;
 
+        const markerModeActive = isMarkerMode(s);
+        const infoSvg2 = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
+        const markerHint = markerModeActive
+            ? `<div class="info-banner">${infoSvg2}<span>Der Marker-Modus ist aktiv – dafür wird die <strong>Tastendruck (Text-UI)</strong>-Interaktion benötigt. Ein Wechsel auf <strong>ox_target</strong> ist hier nicht möglich, solange Marker aktiv sind.</span></div>`
+            : '';
+
         return wrapTab(`
         <div class="admin-section">
             <div class="admin-section__title">Interaktionsart</div>
+            ${markerHint}
             <div class="admin-grid admin-grid--single">
                 <div class="field">
                     <label>Modus</label>
-                    ${customSelect('Interaction', ['key', 'ox_target'], s.Interaction)}
+                    ${customSelect('Interaction', ['key', 'ox_target'], s.Interaction, ['Tastendruck (Text-UI)', 'ox_target'])}
                 </div>
             </div>
         </div>
@@ -860,6 +879,10 @@
                 pendingAddPedJob = value;
             } else if (path === '__outfitsJob') {
                 fetchOutfitsList(value);
+            } else if (path === 'Interaction' && value === 'ox_target' && isMarkerMode(state)) {
+                // Marker brauchen die Text-UI – ox_target hier blockieren.
+                render();
+                return;
             } else {
                 setPath(state, path, value);
             }
@@ -898,6 +921,11 @@
         if (modeBtn) {
             const mode = modeBtn.getAttribute('data-set-mode');
             state.PedSettings = state.PedSettings || {};
+            // Marker nur erlauben, wenn die Text-UI (Tastendruck) aktiv ist.
+            if (mode === 'markers' && !markerAllowed(state)) {
+                render();
+                return;
+            }
             if (state.PedSettings.displayMode !== mode) {
                 state.PedSettings.displayMode = mode;
                 render();

@@ -298,6 +298,26 @@ function JobOutfit.Peds.SpawnAll()
     RefreshPedBlips()
 end
 
+-- ox_lib-Text-UI: wird nur angezeigt, während man wirklich in Reichweite eines
+-- Punktes steht. Status merken, damit nicht in jedem Frame neu ge-/versteckt wird.
+local activeTextUI = nil
+
+local function ShowInteractTextUI(label)
+    if activeTextUI == label then return end
+    activeTextUI = label
+    if lib and lib.showTextUI then
+        lib.showTextUI(label, { position = 'right-center', icon = 'shirt' })
+    end
+end
+
+local function HideInteractTextUI()
+    if activeTextUI == nil then return end
+    activeTextUI = nil
+    if lib and lib.hideTextUI then
+        lib.hideTextUI()
+    end
+end
+
 CreateThread(function()
     while ESX == nil and JobOutfit.State.esx == nil do Wait(250) end
 
@@ -312,19 +332,23 @@ CreateThread(function()
 
     while true do
         if Config.Interaction ~= 'key' then
+            HideInteractTextUI()
             Wait(1000)
         else
             local sleep = 1000
             local playerPed = PlayerPedId()
 
             if not playerPed or playerPed == 0 or not DoesEntityExist(playerPed) then
+                HideInteractTextUI()
                 Wait(sleep)
             else
                 local playerCoords = GetEntityCoords(playerPed)
                 local keyCfg = Config.KeyInteract or {}
-                local drawDistance = tonumber(keyCfg.drawDistance) or 12.0
                 local interactDistance = tonumber(keyCfg.distance) or 2.5
                 local interactKey = tonumber(keyCfg.key) or 38
+
+                -- Nächstliegenden Punkt in Reichweite finden.
+                local nearestInfo, nearestDist = nil, math.huge
 
                 for _, pedInfo in ipairs(JobOutfit.State.spawnedPeds) do
                     local pedCoords
@@ -338,7 +362,7 @@ CreateThread(function()
                     if pedCoords then
                         local distance = #(playerCoords - pedCoords)
 
-                        if distance <= drawDistance then
+                        if distance <= interactDistance then
                             local show = true
 
                             if keyCfg.onlyShowForAllowedJobs then
@@ -346,16 +370,22 @@ CreateThread(function()
                                 show = okHasJob and hasJob == true
                             end
 
-                            if show then
-                                sleep = 0
-                                DrawText3D(pedCoords, pedInfo.label or '[E] Outfit-Menü öffnen')
-
-                                if distance <= interactDistance and IsControlJustReleased(0, interactKey) then
-                                    JobOutfit.Menu.Open(pedInfo.job)
-                                end
+                            if show and distance < nearestDist then
+                                nearestDist = distance
+                                nearestInfo = pedInfo
                             end
                         end
                     end
+                end
+
+                if nearestInfo then
+                    sleep = 0
+                    ShowInteractTextUI(nearestInfo.label or 'Outfit-Menü öffnen')
+                    if IsControlJustReleased(0, interactKey) then
+                        JobOutfit.Menu.Open(nearestInfo.job)
+                    end
+                else
+                    HideInteractTextUI()
                 end
 
                 Wait(sleep)
