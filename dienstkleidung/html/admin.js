@@ -359,9 +359,7 @@
                     <label>Kleidungssystem</label>
                     ${customSelect('ClothingSystem', ['skinchanger', 'native'], s.ClothingSystem)}
                 </div>
-            </div>
-            <div class="admin-grid admin-grid--single">
-                <div class="field">
+                <div class="field span-2">
                     <label>Label „Normale Kleidung anziehen“</label>
                     <input type="text" data-path="RestoreClothesLabel" value="${escapeAttr(s.RestoreClothesLabel)}">
                 </div>
