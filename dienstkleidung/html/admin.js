@@ -72,7 +72,7 @@
         },
         interaction: {
             title: 'Interaktion',
-            desc: 'Key, ox_lib TextUI oder ox_target – wie Spieler mit Peds/Markern interagieren.'
+            desc: 'Key (3D-Text über NPC/Marker), ox_lib TextUI (Bildschirm-Prompt) oder ox_target.'
         }
     };
 
@@ -547,7 +547,7 @@
             ? `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>ox_target</strong>. Für Marker empfohlen: unter <strong>Interaktion</strong> auf <strong>Key</strong> oder <strong>ox_lib TextUI</strong> umstellen.</span></div>`
             : (s.Interaction === 'ox_lib'
                 ? `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>ox_lib TextUI</strong>: Spieler sehen den Prompt rechts und öffnen das Menü per Taste.</span></div>`
-                : `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>Key</strong>: 3D-Text am Ped/Marker und Menü öffnen per Taste.</span></div>`);
+                : `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>Key (3D-Text)</strong>: Text schwebt über dem NPC/Marker – kein ox_lib-Prompt. Menü öffnen per Taste.</span></div>`);
 
         const markerSettingsSection = markerMode ? `
         <div class="admin-section">
@@ -616,12 +616,12 @@
     function renderInteraction(s) {
         const usesKeyLike = s.Interaction === 'key' || s.Interaction === 'ox_lib';
         const keyHelp = s.Interaction === 'ox_lib'
-            ? 'ox_lib Text-UI-Prompt (rechts am Bildschirm) + Taste zum Öffnen.'
-            : '3D-Text direkt am Ped/Marker + Taste zum Öffnen.';
+            ? 'ox_lib Text-UI-Prompt rechts am Bildschirm – kein 3D-Text über dem NPC. Menü per Taste öffnen.'
+            : 'Klassischer 3D-Text direkt über dem NPC/Marker (wie früher) – kein ox_lib TextUI. Menü per Taste öffnen.';
 
         const keySection = usesKeyLike ? `
         <div class="admin-section">
-            <div class="admin-section__title">${s.Interaction === 'ox_lib' ? 'ox_lib TextUI' : 'Key'}-Interaktion</div>
+            <div class="admin-section__title">${s.Interaction === 'ox_lib' ? 'ox_lib TextUI' : 'Key – 3D-Text am NPC'}</div>
             <p class="help-text help-text--compact">${keyHelp}</p>
             <div class="admin-grid admin-grid--narrow">
                 <div class="field"><label>Interaktions-Distanz</label><input type="number" step="0.1" data-path="KeyInteract.distance" value="${s.KeyInteract.distance}"></div>
@@ -652,7 +652,7 @@
             <div class="admin-grid admin-grid--single">
                 <div class="field">
                     <label>Modus</label>
-                    ${customSelect('Interaction', ['key', 'ox_lib', 'ox_target'], s.Interaction, ['Key', 'ox_lib TextUI', 'ox_target'])}
+                    ${customSelect('Interaction', ['key', 'ox_lib', 'ox_target'], s.Interaction, ['Key (3D-Text am NPC)', 'ox_lib TextUI (Bildschirm)', 'ox_target'])}
                 </div>
             </div>
         </div>

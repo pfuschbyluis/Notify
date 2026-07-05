@@ -1,5 +1,5 @@
 -- ============================================================
--- peds.lua – Outfit-Peds spawnen/entfernen + Key-Interaktion
+-- peds.lua – Outfit-Peds spawnen/entfernen + Interaktion (Key 3D-Text / ox_lib TextUI)
 -- ============================================================
 
 JobOutfit.Peds = {}
