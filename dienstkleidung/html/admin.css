@@ -220,6 +220,9 @@
     color: var(--text-2);
     margin-bottom: 14px;
 }
+.help-text--compact {
+    margin-bottom: 10px;
+}
 
 .info-banner {
     display: flex;
@@ -513,16 +516,17 @@
 /* ─── Job toggle grid ────────────────────────────────────── */
 .job-toggle-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 280px));
+    gap: 8px;
+    justify-content: start;
 }
 
 .job-toggle {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
-    padding: 12px 14px;
+    gap: 6px;
+    padding: 10px 12px;
     background: rgba(0,0,0,0.18);
     border: 1px solid var(--border-soft);
     border-radius: 10px;
@@ -531,7 +535,6 @@
     font-weight: 600;
     color: var(--text);
     transition: border-color 0.15s, background 0.15s;
-    min-height: 74px;
 }
 .job-toggle:hover {
     border-color: var(--border);
@@ -786,8 +789,9 @@
 
 .job-color-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 280px));
+    gap: 10px;
+    justify-content: start;
 }
 
 .job-color-row {

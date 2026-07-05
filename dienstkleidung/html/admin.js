@@ -503,10 +503,7 @@
         return wrapTab(`
         <div class="admin-section">
             <div class="admin-section__title">Erlaubte Jobs</div>
-            <p class="help-text">
-                Deaktivierte Jobs können das Menü nicht öffnen, ihr Outfit-Ped wird nicht gespawnt.
-                Jobs mit „nicht konfiguriert“ haben nur leere Platzhalter-Outfits in config.lua – dort fehlt noch die eigentliche Kleidung.
-            </p>
+            <p class="help-text help-text--compact">Deaktivierte Jobs können das Menü nicht öffnen. „Nicht konfiguriert“ = noch keine Kleidungsdaten hinterlegt.</p>
             <div class="job-toggle-grid">${allowedHtml || '<div class="empty-state">Keine Jobs mit hinterlegten Outfits gefunden.</div>'}</div>
         </div>
         <div class="admin-section">
